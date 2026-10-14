@@ -1,0 +1,106 @@
+# Grafo de tareas — fuente de verdad para coordinar agentes.
+# Una tarea está LISTA cuando todas sus deps están fusionadas en main.
+# owns = rutas que SOLO esa tarea crea o modifica (otros las leen). Un cambio fuera de owns requiere una tarea CHG (AGENTS.md).
+# placeholders = archivos que la tarea crea provisionalmente y cuya propiedad pasa a la tarea que los tiene en owns (debe depender de ella).
+# Excepciones de propiedad: plan maestro R-01 (manifiestos de dependencias, solo agregar) y R-02 (__init__.py vacíos, tests propios).
+# Validado por scripts/tasks_check.py (AGT-01): IDs únicos, deps existentes, sin ciclos, owns sin solapes.
+plans:
+  P01: docs/superpowers/plans/2026-10-14-01-spikes-foundation.md
+  P02: docs/superpowers/plans/2026-10-14-02-sync-fetch-extract.md
+  P03: docs/superpowers/plans/2026-10-14-03-cards.md
+  P04: docs/superpowers/plans/2026-10-14-04-audio.md
+  P05: docs/superpowers/plans/2026-10-14-05-bundle-web.md
+  P06: docs/superpowers/plans/2026-10-14-06-pronunciation.md
+  P07: docs/superpowers/plans/2026-10-14-07-ops-golive.md
+tasks:
+  # ---------- Spikes (salida: ADR + fixtures) ----------
+  - {id: SPK-01, plan: P01, human: false, deps: [], title: "Edge-TTS: confirmar las 13 voces, formato y límites", owns: [docs/decisions/ADR-001-edge-tts.md, scripts/spikes/spk01_edge_voices.py]}
+  - {id: SPK-02, plan: P01, human: true,  deps: [], title: "Voces infantiles: escuchar Eloise y decidir la fuente de referencias", owns: [docs/decisions/ADR-002-child-voices.md, docs/decisions/consent-template.md]}
+  - {id: SPK-03, plan: P01, human: false, deps: [], title: "Benchmark de clonación en CPU: Chatterbox vs XTTS v2", owns: [docs/decisions/ADR-003-clone-engine.md, scripts/spikes/spk03_clone_bench.py]}
+  - {id: SPK-04, plan: P01, human: true,  deps: [], title: "Capturar fixtures reales de Azure Pronunciation fr-FR", owns: [docs/decisions/ADR-004-azure-phonemes.md, tests/fixtures/azure/, scripts/spikes/spk04_make_audio.py]}
+  - {id: SPK-05, plan: P01, human: true,  deps: [], title: "OAuth de Google en producción + acceso Workspace UNAL", owns: [docs/decisions/ADR-005-google-oauth.md]}
+  - {id: SPK-06, plan: P01, human: true,  deps: [], title: "LLM en Azure AI Foundry con Azure for Students", owns: [docs/decisions/ADR-006-llm.md, scripts/spikes/spk06_llm_probe.py]}
+  # ---------- Fundación ----------
+  - {id: FND-01, plan: P01, human: false, deps: [], title: "Scaffold del monorepo (uv, ruff, mypy, pytest, Vite/React/TS, CI básico)", owns: [pyproject.toml, uv.lock, .npmrc, .gitignore, web/package.json, web/package-lock.json, web/tsconfig.json, web/index.html, web/eslint.config.js, web/.npmrc, web/src/vite-env.d.ts, web/public/, .github/workflows/ci.yml, src/frances/__init__.py, tests/conftest.py], placeholders: [web/src/main.tsx, web/vite.config.ts]}
+  - {id: FND-02, plan: P01, human: false, deps: [FND-01], title: "Contratos: modelos, IDs, textnorm, export de JSON Schema y tipos TS", owns: [src/frances/models/, src/frances/textnorm.py, contracts/, web/src/contracts/, web/scripts/gen-types.mjs]}
+  - {id: FND-03, plan: P01, human: false, deps: [FND-02, FND-04], title: "SQLite: migración 0001, Store, dump/restore deterministas, medidores de uso", owns: [src/frances/db/, src/frances/stage.py]}
+  - {id: FND-04, plan: P01, human: false, deps: [FND-01], title: "Núcleo: config, paths, log+redact, errors, timeutil, CLI", owns: [src/frances/config.py, src/frances/paths.py, src/frances/log.py, src/frances/errors.py, src/frances/timeutil.py, src/frances/cli.py, frances.example.toml]}
+  - {id: FND-05, plan: P01, human: false, deps: [FND-01], title: "Generador de fixtures sintéticos (Classroom, Drive, PDF, imágenes) + mocks respx", owns: [tests/fixtures/make_fixtures.py, tests/fixtures/google_mock.py, tests/fixtures/classroom/, tests/fixtures/drive/, tests/fixtures/pdf/, tests/fixtures/images/]}
+  - {id: AGT-01, plan: P01, human: false, deps: [FND-01], title: "Validador de tasks.yaml y sincronización con GitHub Issues", owns: [scripts/tasks_check.py, scripts/sync_issues.py]}
+  # ---------- Sync ----------
+  - {id: SYN-01, plan: P02, human: false, deps: [FND-04, SYN-02], title: "OAuth: frances auth init/check", owns: [src/frances/sync/auth.py]}
+  - {id: SYN-02, plan: P02, human: false, deps: [FND-04], title: "Cliente HTTP de Google: refresh, reintentos, paginación, errores", owns: [src/frances/sync/google_http.py]}
+  - {id: SYN-03, plan: P02, human: false, deps: [SYN-02, FND-02, FND-05], title: "ClassroomClient: cursos, temas y streams por updateTime desc", owns: [src/frances/sync/classroom.py]}
+  - {id: SYN-04, plan: P02, human: false, deps: [SYN-03, SYN-05, FND-03], title: "Sync incremental por stream con watermark", owns: [src/frances/sync/streams.py, src/frances/sync/repo.py]}
+  - {id: SYN-05, plan: P02, human: false, deps: [FND-02, FND-05], title: "Normalización de adjuntos (materials → Attachment)", owns: [src/frances/sync/attachments.py]}
+  - {id: SYN-06, plan: P02, human: false, deps: [SYN-04], title: "Reconciliación completa: tombstones de publicaciones y adjuntos", owns: [src/frances/sync/reconcile.py]}
+  - {id: SYN-07, plan: P02, human: false, deps: [SYN-01, SYN-04, SYN-06], title: "Etapa sync/reconcile + CLI + semántica de fallo de auth", owns: [src/frances/sync/run.py]}
+  # ---------- Fetch ----------
+  - {id: FET-01, plan: P02, human: false, deps: [SYN-02, FND-05], title: "DriveClient: metadatos, versión, descarga, exportación", owns: [src/frances/fetch/drive.py]}
+  - {id: FET-02, plan: P02, human: false, deps: [FND-04], title: "BlobStore content-addressed con tope de tamaño", owns: [src/frances/fetch/blobs.py]}
+  - {id: FET-03, plan: P02, human: false, deps: [FET-01, FET-02, FND-03, SYN-01], title: "Etapa fetch: descarga/export, re-fetch por versión, estados", owns: [src/frances/fetch/run.py, src/frances/fetch/repo.py]}
+  # ---------- Extract ----------
+  - {id: EXT-01, plan: P02, human: false, deps: [FND-02, FND-05], title: "PDF: capa de texto + OCR por página", owns: [src/frances/extract/pdf.py]}
+  - {id: EXT-02, plan: P02, human: false, deps: [FND-02, FND-05], title: "OCR de imágenes fra+spa", owns: [src/frances/extract/ocr.py]}
+  - {id: EXT-03, plan: P02, human: false, deps: [FND-02], title: "Etiquetado de idioma por bloque", owns: [src/frances/extract/lang.py]}
+  - {id: EXT-04, plan: P02, human: false, deps: [EXT-01, EXT-02, EXT-03, FET-02, FND-03], title: "Etapa extract idempotente por (blob, versión)", owns: [src/frances/extract/run.py, src/frances/extract/repo.py]}
+  # ---------- Cards ----------
+  - {id: CRD-01, plan: P03, human: false, deps: [FND-03, EXT-03], title: "Ensamblado de GenerationInput por publicación", owns: [src/frances/cards/input.py]}
+  - {id: CRD-02, plan: P03, human: false, deps: [FND-02], title: "Generador por reglas (spaCy) con Translator inyectado", owns: [src/frances/cards/rules.py]}
+  - {id: CRD-03, plan: P03, human: false, deps: [FND-03], title: "AzureTranslator F0 con medidor de cuota", owns: [src/frances/cards/translate.py]}
+  - {id: CRD-04, plan: P03, human: false, deps: [FND-02, SPK-06], title: "Generador LLM (OpenAI-compatible, salida estructurada validada)", owns: [src/frances/cards/llm.py]}
+  - {id: CRD-05, plan: P03, human: false, deps: [CRD-01, CRD-02, CRD-03, CRD-04, EXT-04], title: "Etapa cards: merge, orígenes, stale, upgrade a LLM, fichas", owns: [src/frances/cards/run.py, src/frances/cards/merge.py, src/frances/cards/repo.py]}
+  - {id: CRD-06, plan: P03, human: false, deps: [FND-03, SPK-04], title: "Fonemización espeak-ng + mapa a etiquetas Azure", owns: [src/frances/cards/phonemes.py, src/frances/cards/phoneme_map.py]}
+  - {id: CRD-07, plan: P03, human: false, deps: [CRD-06], title: "Mazos de taladro curados y automáticos por fonema", owns: [src/frances/cards/drills.py, src/frances/cards/drills_seed.yaml]}
+  # ---------- Audio ----------
+  - {id: AUD-01, plan: P04, human: false, deps: [FND-02, FND-04, SPK-01], title: "Registro de voces + validación de consentimiento", owns: [src/frances/audio/voices.py, src/frances/audio/voices_default.yaml]}
+  - {id: AUD-02, plan: P04, human: false, deps: [AUD-01, FND-03], title: "Cache key + política de voces + plan_audio", owns: [src/frances/audio/cachekey.py, src/frances/audio/policy.py, src/frances/audio/repo.py]}
+  - {id: AUD-03, plan: P04, human: false, deps: [FND-02, SPK-01], title: "Motor Edge-TTS", owns: [src/frances/audio/edge.py]}
+  - {id: AUD-04, plan: P04, human: false, deps: [FND-03, AUD-03], title: "Motor Azure TTS F0 (respaldo) con tope mensual", owns: [src/frances/audio/azure_tts.py]}
+  - {id: AUD-05, plan: P04, human: false, deps: [FND-04], title: "Post-proceso ffmpeg: MP3 24k/48k mono, −16 LUFS, duración", owns: [src/frances/audio/post.py]}
+  - {id: AUD-06, plan: P04, human: false, deps: [AUD-02, AUD-03, AUD-04, AUD-05], title: "Etapa audio: cola, concurrencia, fallback Edge→Azure", owns: [src/frances/audio/run.py]}
+  - {id: AUD-07, plan: P04, human: false, deps: [FND-03, SPK-03], title: "Proyecto clone/: protocolo de motor + adaptadores Chatterbox/XTTS", owns: [clone/pyproject.toml, clone/uv.lock, clone/src/frances_clone/__init__.py, clone/src/frances_clone/engines/]}
+  - {id: AUD-08, plan: P04, human: false, deps: [AUD-07], title: "QA de clips con faster-whisper (CER)", owns: [clone/src/frances_clone/qa.py]}
+  - {id: AUD-09, plan: P04, human: false, deps: [AUD-07, AUD-08, AUD-05, AUD-02], title: "frances-clone run: lote con tope, reanudable, QA", owns: [clone/src/frances_clone/run.py, clone/src/frances_clone/cli.py]}
+  - {id: AUD-10, plan: P04, human: false, deps: [AUD-07, SPK-02, AUD-03], title: "Referencias sintéticas adolescente/infantil (frances-clone make-ref)", owns: [clone/src/frances_clone/refvoice.py]}
+  # ---------- Bundle ----------
+  - {id: BND-01, plan: P05, human: false, deps: [FND-01], title: "FRB1 en Python + vectores de prueba", owns: [src/frances/bundle/frb1.py, tests/fixtures/frb1_vectors.json]}
+  - {id: BND-02, plan: P05, human: false, deps: [FND-02, FND-03, BND-03, EXT-03], title: "Constructor del ContentIndex desde el Store", owns: [src/frances/bundle/index.py]}
+  - {id: BND-03, plan: P05, human: false, deps: [BND-01, FND-04], title: "Empaquetador d/*.bin con dedupe y presupuesto de tamaño", owns: [src/frances/bundle/pack.py]}
+  - {id: BND-04, plan: P05, human: false, deps: [BND-02, BND-03, FND-05, CRD-07, AUD-01], title: "Etapa bundle + política de passphrase + demo-bundle", owns: [src/frances/bundle/run.py, src/frances/bundle/demo.py, tests/fixtures/demo_state.sql, tests/fixtures/demo_audio/]}
+  # ---------- Web ----------
+  - {id: WEB-01, plan: P05, human: false, deps: [FND-01], title: "Shell: rutas, layout, tokens, es.ts, a11y, idb.ts", owns: [web/src/App.tsx, web/src/main.tsx, web/src/ui/layout/, web/src/ui/theme.css, web/src/i18n/, web/src/db/idb.ts]}
+  - {id: WEB-02, plan: P05, human: false, deps: [WEB-01, BND-01], title: "FRB1 en TypeScript + keystore no extraíble", owns: [web/src/crypto/]}
+  - {id: WEB-03, plan: P05, human: false, deps: [WEB-02, FND-02], title: "Loader, blobs descifrados y ContentContext", owns: [web/src/data/]}
+  - {id: WEB-04, plan: P05, human: false, deps: [WEB-03], title: "Pantalla Desbloquear", owns: [web/src/routes/Unlock.tsx]}
+  - {id: WEB-05, plan: P05, human: false, deps: [WEB-08, WEB-06, PRN-04], title: "Pantalla Hoy", owns: [web/src/routes/Today.tsx]}
+  - {id: WEB-06, plan: P05, human: false, deps: [WEB-03], title: "Classroom + detalle de publicación + visores PDF/imagen", owns: [web/src/routes/Classroom.tsx, web/src/routes/ItemDetail.tsx, web/src/ui/viewers/]}
+  - {id: WEB-07, plan: P05, human: false, deps: [WEB-06], title: "Ficha de estudio", owns: [web/src/routes/Sheet.tsx]}
+  - {id: WEB-08, plan: P05, human: false, deps: [WEB-10], title: "SRS (ts-fsrs + IndexedDB) y pantalla Repaso", owns: [web/src/srs/, web/src/routes/Review.tsx]}
+  - {id: WEB-09, plan: P05, human: false, deps: [WEB-10], title: "Buscador de tarjetas", owns: [web/src/routes/Cards.tsx]}
+  - {id: WEB-10, plan: P05, human: false, deps: [WEB-03], title: "Componente AudioPlayer (voces, pendiente)", owns: [web/src/ui/AudioPlayer.tsx]}
+  - {id: WEB-11, plan: P05, human: false, deps: [WEB-08, PRN-04, PRN-06], title: "Ajustes + exportar/importar progreso + bloquear", owns: [web/src/routes/Settings.tsx, web/src/progress/]}
+  - {id: WEB-12, plan: P05, human: false, deps: [WEB-03], title: "PWA offline (service worker)", owns: [web/src/sw/, web/vite.config.ts]}
+  - {id: WEB-13, plan: P05, human: false, deps: [BND-04, WEB-04, WEB-05, WEB-07, WEB-09, WEB-11, PRN-05, PRN-07], title: "E2E Playwright sobre el demo-bundle", owns: [web/e2e/, web/playwright.config.ts]}
+  # ---------- Pronunciación ----------
+  - {id: PRN-01, plan: P06, human: false, deps: [FND-02, SPK-04], title: "Parser del JSON de Azure → PronResult", owns: [web/src/pron/parse.ts, web/src/pron/phonemeLabels.ts]}
+  - {id: PRN-02, plan: P06, human: false, deps: [PRN-01, WEB-03], title: "Recognizer Azure + máquina de estados del grabador", owns: [web/src/pron/recognizer.ts, web/src/pron/recorder.ts]}
+  - {id: PRN-03, plan: P06, human: false, deps: [PRN-02, PRN-04, PRN-06, WEB-10], title: "Pantalla Práctica: escuchar, grabar, puntajes por palabra/fonema", owns: [web/src/routes/Practice.tsx, web/src/ui/pron/]}
+  - {id: PRN-04, plan: P06, human: false, deps: [PRN-01, WEB-01], title: "Intentos + estadística EMA por fonema + debilidades", owns: [web/src/pron/attempts.ts, web/src/pron/stats.ts]}
+  - {id: PRN-05, plan: P06, human: false, deps: [PRN-03, PRN-04], title: "Sesión de taladro por fonema débil", owns: [web/src/pron/drill.ts, web/src/routes/Drill.tsx]}
+  - {id: PRN-06, plan: P06, human: false, deps: [PRN-04], title: "Medidor de cuota F0 (5 h/mes, aviso a 4 h)", owns: [web/src/pron/quota.ts]}
+  - {id: PRN-07, plan: P06, human: false, deps: [PRN-04, PRN-06], title: "Pantalla Progreso (mapa de fonemas, historial)", owns: [web/src/routes/Progress.tsx]}
+  # ---------- Operación ----------
+  - {id: OPS-01, plan: P07, human: false, deps: [AGT-01, BND-04, WEB-13], title: "CI completo del repo público (contratos, grafo, e2e)", owns: [.github/workflows/contracts.yml, .github/workflows/e2e.yml, .github/workflows/clone-tests.yml]}
+  - {id: OPS-02, plan: P07, human: false, deps: [SYN-07, FET-03, EXT-04, CRD-05, CRD-06, CRD-07, AUD-06, BND-04], title: "frances run-daily (orquestación + detección de cambios)", owns: [src/frances/ops/daily.py]}
+  - {id: OPS-03, plan: P07, human: false, deps: [OPS-02], title: "Persistencia: dump + commit/push con reintento", owns: [scripts/persist.sh]}
+  - {id: OPS-04, plan: P07, human: false, deps: [FND-04], title: "frances report-failure (issues idempotentes)", owns: [src/frances/ops/report.py]}
+  - {id: OPS-05, plan: P07, human: false, deps: [OPS-02, OPS-03, OPS-04, OPS-08, AUD-09], title: "Plantilla del repo frances-data (workflows, config, README)", owns: [data-repo-template/]}
+  - {id: OPS-06, plan: P07, human: false, deps: [OPS-01], title: "Demo público en Pages con datos sintéticos", owns: [.github/workflows/demo-pages.yml]}
+  - {id: OPS-07, plan: P07, human: false, deps: [FND-03, AUD-01], title: "frances doctor (tamaños, cuotas, token, consentimiento)", owns: [src/frances/ops/doctor.py]}
+  - {id: OPS-08, plan: P07, human: false, deps: [AUD-09], title: "Runner self-hosted para clonación (guía + script)", owns: [docs/runbooks/self-hosted-runner.md, scripts/runner/]}
+  # ---------- Puesta en marcha (humano + agente) ----------
+  - {id: LIVE-01, plan: P07, human: true, deps: [SPK-05, SYN-01], title: "Proyecto GCP, cliente OAuth en producción, refresh token", owns: []}
+  - {id: LIVE-02, plan: P07, human: true, deps: [OPS-05, LIVE-01], title: "Crear frances-data, Pages, secretos, FRANCES_CODE_SHA", owns: []}
+  - {id: LIVE-03, plan: P07, human: false, deps: [LIVE-02], title: "Backfill inicial + checklist de aceptación", owns: []}
+  - {id: LIVE-04, plan: P07, human: true, deps: [LIVE-03, AUD-10], title: "Registrar runner + primer lote de clonación + escucha", owns: []}
