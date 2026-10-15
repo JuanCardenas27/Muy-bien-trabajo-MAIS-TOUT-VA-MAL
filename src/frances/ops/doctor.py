@@ -160,7 +160,9 @@ def usage_lines(conn: sqlite3.Connection, settings: Settings, month: str) -> lis
             cap=tr_cap,
             warn=tr_used >= int(tr_cap * USAGE_WARN_RATIO),
         ),
-        UsageLine(meter="llm_items", used=usage_get(conn, month, "llm_items"), cap=None, warn=False),
+        UsageLine(
+            meter="llm_items", used=usage_get(conn, month, "llm_items"), cap=None, warn=False
+        ),
     ]
 
 
@@ -248,7 +250,9 @@ def run_doctor(ctx: StageContext, online: bool) -> DoctorReport:
     estimated = estimate_bundle_bytes(conn, ctx.paths)
     lines.append(f"[bundle] estimado: {_fmt_mb(estimated)} (aviso a {_fmt_mb(budget)})")
     if estimated > budget:
-        warnings.append(f"bundle estimado {_fmt_mb(estimated)} supera el aviso de {_fmt_mb(budget)}")
+        warnings.append(
+            f"bundle estimado {_fmt_mb(estimated)} supera el aviso de {_fmt_mb(budget)}"
+        )
     lines.append(f"[uso {month}]")
     for usage in usage_lines(conn, ctx.settings, month):
         if usage.cap is None:

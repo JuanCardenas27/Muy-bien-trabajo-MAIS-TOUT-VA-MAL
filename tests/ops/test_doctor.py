@@ -1,7 +1,7 @@
 """Tests de `frances doctor` (OPS-07): tamaños, cuotas, pendientes, voces y token."""
 
-import os
 import json
+import os
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -99,11 +99,13 @@ def store_with_rows(store: Store, data_dir: Path) -> Store:
             (item_id, item_id, _NOW, _NOW, item_id, _NOW, _NOW),
         )
     conn.execute(
-        "INSERT INTO blobs (sha256, size, mime_type, created_at) VALUES (?, 100, 'application/pdf', ?)",
+        "INSERT INTO blobs (sha256, size, mime_type, created_at)"
+        " VALUES (?, 100, 'application/pdf', ?)",
         (_BLOB_A, _NOW),
     )
     conn.execute(
-        "INSERT INTO blobs (sha256, size, mime_type, created_at) VALUES (?, 50, 'application/pdf', ?)",
+        "INSERT INTO blobs (sha256, size, mime_type, created_at)"
+        " VALUES (?, 50, 'application/pdf', ?)",
         (_BLOB_B, _NOW),
     )
     for n in ("a1", "a2"):
@@ -130,7 +132,7 @@ def store_with_rows(store: Store, data_dir: Path) -> Store:
             " 'pending', 0, ?)",
             (key, _NOW),
         )
-    data_dir.joinpath("audio", f"k3.mp3").write_bytes(b"a" * 10)
+    data_dir.joinpath("audio", "k3.mp3").write_bytes(b"a" * 10)
     conn.execute(
         "INSERT INTO audio (cache_key, text, text_norm, voice_id, family, family_version, status,"
         " engine_used, path, duration_ms, attempts, updated_at)"
@@ -185,7 +187,9 @@ def test_sizes_by_dir_and_top10(data_dir: Path) -> None:
 def test_bundle_estimate_counts_unique_files_and_overhead(
     store_with_rows: Store, data_dir: Path
 ) -> None:
-    assert estimate_bundle_bytes(store_with_rows.conn, DataPaths(data_dir)) == 100 + 50 + 10 + 3 * 32
+    assert (
+        estimate_bundle_bytes(store_with_rows.conn, DataPaths(data_dir)) == 100 + 50 + 10 + 3 * 32
+    )
 
 
 def test_usage_lines_against_caps(store: Store, settings: Settings) -> None:
