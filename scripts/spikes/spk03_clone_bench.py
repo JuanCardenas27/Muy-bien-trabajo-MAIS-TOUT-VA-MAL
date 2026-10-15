@@ -11,22 +11,35 @@
 """SPK-03: Benchmark de clonacion en CPU — Chatterbox vs XTTS v2.
 
 Mide s/clip, RTF, RAM pico y CER (via faster-whisper small int8 CPU)
-sobre 30 frases francesas fijas (las 10 primeras de 1-3 palabras),
+sobre frases francesas fijas (las 10 primeras de 1-3 palabras),
 clonando una referencia generada con Edge-TTS (fr-FR-EloiseNeural).
+
+CAMBIO DE ALCANCE (2026-10-14, decision del usuario): el benchmark es de
+10 clips por motor, no 30 (limite de CPU de la VM: Chatterbox tarda
+~2 min/clip en 2 vCPU). El script conserva las 30 frases fijas del plan;
+los benchmarks se corren con `--limit 10`. Ver ADR-003.
 
 IMPORTANTE: este archivo NO declara dependencias de motor en PEP 723
 (chatterbox-tts y coqui-tts chocan entre si). Se corre una vez por motor:
 
-    uv run --python 3.11 --with chatterbox-tts==0.1.7 \
-        scripts/spikes/spk03_clone_bench.py run --engine chatterbox
+    uv run --python 3.11 --with chatterbox-tts==0.1.7 --with setuptools==80.9.0 \
+        scripts/spikes/spk03_clone_bench.py run --engine chatterbox --limit 10
+    (setuptools==80.9.0 aporta pkg_resources, que perth>=1.0.0 exige;
+    setuptools>=81 lo elimino y PerthImplicitWatermarker queda en None).
 
     COQUI_TOS_AGREED=1 uv run --python 3.11 --with coqui-tts==0.27.5 \
-        scripts/spikes/spk03_clone_bench.py run --engine xtts
+        scripts/spikes/spk03_clone_bench.py run --engine xtts --limit 10
 
 Subcomandos:
     make-ref            genera .cache/spikes/spk03/ref.wav (24 kHz mono, 10-15 s)
-    run --engine E      sintetiza las 30 frases y escribe <engine>.json
+    run --engine E      sintetiza las frases (--limit N) y escribe <engine>.json
+    requant --engine E  reconstruye <engine>.json desde clips ya existentes
+                        (00.wav..NN.wav) + tiempos del <engine>.log, sin
+                        re-sintetizar; re-transcribe y re-calcula CER/duracion
     report              une los JSON en una tabla Markdown (stdout)
+
+ROBUSTEZ SANDBOX: ningun temporal va a /tmp ni /proc (la sandbox los
+rechaza); todos los temporales viven en .cache/spikes/spk03/tmp.
 """
 
 from __future__ import annotations
@@ -131,6 +144,31 @@ def clips_dir(engine: str) -> Path:
 
 def json_path(engine: str) -> Path:
     return cache_dir() / f"{engine}.json"
+
+
+def log_path(engine: str) -> Path:
+    return cache_dir() / f"{engine}.log"
+
+
+def worktree_tmp() -> Path:
+    """Directorio de temporales dentro del worktree (nunca /tmp).
+
+    La sandbox rechaza el acceso a /tmp y /proc; todas las herramientas
+    del benchmark deben usar este directorio (via TMPDIR o `dir=`).
+    """
+    d = cache_dir() / "tmp"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def ensure_worktree_tmp() -> Path:
+    """Apunta TMPDIR/TEMP/TMP al worktree si apuntan a /tmp o estan vacias."""
+    d = worktree_tmp()
+    for var in ("TMPDIR", "TEMP", "TMP"):
+        val = os.environ.get(var, "")
+        if not val or val == "/tmp" or val.startswith("/tmp/"):
+            os.environ[var] = str(d)
+    return d
 
 
 # ---------------------------------------------------------------------------
@@ -519,7 +557,8 @@ async def _edge_save(text: str, voice: str, mp3_path: Path) -> None:
 
 def cmd_make_ref(voice: str = VOICE_REF) -> Path:
     out = ref_path()
-    with tempfile.TemporaryDirectory(prefix="spk03-ref-") as tmp:
+    ensure_worktree_tmp()
+    with tempfile.TemporaryDirectory(prefix="spk03-ref-", dir=str(worktree_tmp())) as tmp:
         mp3 = Path(tmp) / "ref.mp3"
         asyncio.run(_edge_save(REF_TEXT, voice, mp3))
         cmd = [
@@ -700,6 +739,126 @@ def cmd_run(engine: str, limit: int = len(PHRASES)) -> Path:
 
 
 # ---------------------------------------------------------------------------
+# requant: reconstruir el JSON desde clips existentes + log de tiempos
+# ---------------------------------------------------------------------------
+
+_LOG_LINE_RE = re.compile(
+    r"\[(?P<engine>[a-z]+)\s+(?P<idx>\d+)/(?P<total>\d+)\]\s+"
+    r"(?P<seconds>[\d.]+)s\s+rtf=(?P<rtf>[\d.]+)\s+"
+    r"ram=(?P<ram_gb>[\d.]+)GB\s+cer=(?P<cer>[\d.]+)\s+::\s(?P<text>.*)"
+)
+
+
+def parse_log_timings(engine: str) -> dict[int, dict]:
+    """Lee <engine>.log y devuelve {indice: {seconds, rtf, ram_gb, log_cer}}."""
+    log = log_path(engine)
+    if not log.exists():
+        raise SystemExit(f"falta {log}: sin log no hay tiempos medidos que reutilizar")
+    out: dict[int, dict] = {}
+    for line in log.read_text(encoding="utf-8", errors="replace").splitlines():
+        m = _LOG_LINE_RE.search(line)
+        if m and m.group("engine") == engine:
+            out[int(m.group("idx")) - 1] = {
+                "seconds": float(m.group("seconds")),
+                "rtf": float(m.group("rtf")),
+                "ram_gb": float(m.group("ram_gb")),
+                "log_cer": float(m.group("cer")),
+            }
+    return out
+
+
+def cmd_requant(engine: str, limit: int = 10) -> Path:
+    """Reconstruye <engine>.json sin re-sintetizar.
+
+    Usa los clips existentes (00.wav..), los tiempos/RAM medidos en
+    <engine>.log y re-transcribe + re-calcula CER y duracion con la misma
+    configuracion que `run` (faster-whisper small int8 CPU, `norm`).
+    """
+    if engine not in SYNTH:
+        raise SystemExit(f"--engine debe ser uno de {ENGINES}")
+    ensure_worktree_tmp()
+    ref = ref_path()
+    if not ref.exists():
+        raise SystemExit(f"falta {ref}: corre primero el subcomando make-ref")
+    phrases = PHRASES[:limit]
+    out_json = json_path(engine)
+    cdir = clips_dir(engine)
+    for i in range(len(phrases)):
+        if not (cdir / f"{i:02d}.wav").exists():
+            raise SystemExit(f"falta {cdir / f'{i:02d}.wav'}: requant no sintetiza")
+    timings = parse_log_timings(engine)
+    missing = [i for i in range(len(phrases)) if i not in timings]
+    if missing:
+        raise SystemExit(f"el log no trae tiempos para los indices {missing}")
+
+    from faster_whisper import WhisperModel
+
+    print("cargando faster-whisper small (int8, cpu) ...", flush=True)
+    whisper = WhisperModel("small", device="cpu", compute_type="int8")
+
+    import jiwer
+
+    rows: list[dict] = []
+    for i, text in enumerate(phrases):
+        clip = cdir / f"{i:02d}.wav"
+        t = timings[i]
+        duration = wav_duration_s(clip)
+        hyp = transcribe_clip(whisper, clip)
+        cer = jiwer.cer(norm(text), norm(hyp))
+        if abs(cer - t["log_cer"]) > 0.05:
+            print(
+                f"AVISO clip {i:02d}: CER re-calculado={cer:.3f} difiere del "
+                f"log={t['log_cer']:.3f} (se conserva el re-calculado).",
+                file=sys.stderr,
+            )
+        ram_bytes = int(round(t["ram_gb"] * 1e9))
+        rows.append(
+            {
+                "id": i,
+                "text": text,
+                "short": i < N_SHORT,
+                "audio": str(clip.relative_to(repo_root())),
+                "seconds": round(t["seconds"], 3),
+                "duration_s": round(duration, 3),
+                "rtf": round(t["rtf"], 3),
+                "ram_peak_bytes": ram_bytes,
+                "ram_peak_gb": round(ram_bytes / 1e9, 3),
+                "hypothesis": hyp,
+                "cer": round(cer, 4),
+            }
+        )
+        print(
+            f"[{engine} requant {i + 1}/{len(phrases)}] {t['seconds']:7.1f}s "
+            f"rtf={t['rtf']:5.2f} ram={t['ram_gb']:4.2f}GB cer={cer:.3f} :: {text}",
+            flush=True,
+        )
+
+    summary = summarize(rows)
+    payload = {
+        "engine": engine,
+        "model": XTTS_MODEL if engine == "xtts" else "chatterbox-multilingual (language_id=fr)",
+        "versions": engine_versions(engine),
+        "ref": str(ref.relative_to(repo_root())),
+        "whisper": {"model": "small", "compute_type": "int8", "device": "cpu", "language": "fr"},
+        "cer_threshold": CER_FAIL_THRESHOLD,
+        "total_wall_s": round(sum(r["seconds"] for r in rows), 1),
+        "system": {
+            "cpu_count": os.cpu_count(),
+            "platform": platform.platform(),
+        },
+        "rows": rows,
+        "summary": summary,
+        "provenance": {
+            "method": "requant",
+            "note": "clips reutilizados sin re-sintetizar; seconds/ram del log, CER re-calculado",
+        },
+    }
+    out_json.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"\nOK {engine}: {out_json} ({len(rows)} filas, resumen={summary})")
+    return out_json
+
+
+# ---------------------------------------------------------------------------
 # report: tabla Markdown uniendo los JSON
 # ---------------------------------------------------------------------------
 
@@ -750,12 +909,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_run = sub.add_parser("run", help="correr el benchmark de un motor")
     p_run.add_argument("--engine", choices=list(ENGINES), default=None)
     p_run.add_argument("--limit", type=int, default=len(PHRASES))
+    p_req = sub.add_parser("requant", help="reconstruir JSON desde clips + log")
+    p_req.add_argument("--engine", choices=list(ENGINES), default=None)
+    p_req.add_argument("--limit", type=int, default=10)
     sub.add_parser("report", help="tabla Markdown con los JSON")
     return ap
 
 
 def main(argv: list[str] | None = None) -> None:
     ensure_tls_trust()
+    ensure_worktree_tmp()
     ap = build_parser()
     args = ap.parse_args(argv)
     if args.cmd == "make-ref":
@@ -767,6 +930,11 @@ def main(argv: list[str] | None = None) -> None:
         if engine is None:
             raise SystemExit("run requiere --engine chatterbox|xtts")
         cmd_run(engine, limit=args.limit)
+    elif args.cmd == "requant":
+        engine = args.engine or getattr(args, "engine", None)
+        if engine is None:
+            raise SystemExit("requant requiere --engine chatterbox|xtts")
+        cmd_requant(engine, limit=args.limit)
     elif args.cmd == "report":
         cmd_report()
 
