@@ -242,7 +242,7 @@ def item_without(ctx: StageContext, _file_id: str) -> str:
             " raw_json, first_seen_at, last_seen_at, deleted_at)"
             " VALUES (?, ?, 'coursework', 'extra_same_blob', NULL, 'Extra', '',"
             " 'PUBLISHED', NULL, ?, ?, NULL, ?, '{}', ?, ?, NULL)",
-            (iid, NOW, NOW, hashlib.sha256(iid.encode()).hexdigest(), NOW, NOW),
+            (iid, FRENCH_COURSE_ID, NOW, NOW, hashlib.sha256(iid.encode()).hexdigest(), NOW, NOW),
         )
     return iid
 
