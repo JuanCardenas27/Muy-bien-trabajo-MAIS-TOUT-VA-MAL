@@ -80,9 +80,7 @@ def extract_attachments(raw: dict[str, Any], item_id: str) -> list[Attachment]:
             kind = "form"
             parts = _flat_parts(material, "form", "formUrl", "formUrl")
         if kind is None or parts is None:
-            logger.warning(
-                "material desconocido ignorado: claves=%s", ",".join(sorted(material))
-            )
+            logger.warning("material desconocido ignorado: claves=%s", ",".join(sorted(material)))
             continue
         external_id, title, url = parts
         if (kind, external_id) in seen:
