@@ -62,8 +62,10 @@ def two_page_pdf(tmp_path: Path, first: str, second: str) -> Path:
 def test_text_pdf_never_calls_ocr() -> None:
     ocr = CountingOcr("x")
     pages = extract_pdf(FIX / "pdf/lesson-text.pdf", ocr)
-    assert [p.page for p in pages] == list(range(1, n_pages(FIX / "pdf/lesson-text.pdf") + 1)) and ocr.calls == 0
-    assert all(p.method == "pdf_text" for p in pages) and "l’école" in "".join(p.text for p in pages)
+    assert [p.page for p in pages] == list(range(1, n_pages(FIX / "pdf/lesson-text.pdf") + 1))
+    assert ocr.calls == 0
+    assert all(p.method == "pdf_text" for p in pages)
+    assert "l’école" in "".join(p.text for p in pages)  # noqa: RUF001
 
 
 def test_scanned_pdf_ocrs_every_page_at_200_dpi() -> None:
@@ -75,7 +77,11 @@ def test_scanned_pdf_ocrs_every_page_at_200_dpi() -> None:
 
 
 def test_page_without_text_layer_uses_ocr(tmp_path: Path) -> None:
-    pdf = two_page_pdf(tmp_path, "Bonjour, je m’appelle Ana et j’étudie le français.", "")  # pág. 2 vacía
+    pdf = two_page_pdf(
+        tmp_path,
+        "Bonjour, je m’appelle Ana et j’étudie le français.",  # noqa: RUF001
+        "",
+    )  # pág. 2 vacía
     ocr = CountingOcr("Hola, me llamo Ana y estudio francés.")
     pages = extract_pdf(pdf, ocr)
     assert [p.method for p in pages] == ["pdf_text", "pdf_ocr"] and ocr.calls == 1

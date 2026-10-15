@@ -22,7 +22,7 @@ def extract_pdf(
     dpi: int = 200,
 ) -> list[PageText]:
     """Extrae el texto de cada página: capa de texto si basta, si no OCR."""
-    import pypdfium2 as pdfium
+    import pypdfium2 as pdfium  # type: ignore[import-untyped]
 
     pages: list[PageText] = []
     doc = pdfium.PdfDocument(str(path))
