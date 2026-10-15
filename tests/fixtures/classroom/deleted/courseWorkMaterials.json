@@ -1,0 +1,145 @@
+{
+  "courseWorkMaterial": [
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/m_0001",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-03T13:00:00Z",
+      "description": "Il fait beau en France.",
+      "id": "m_0001",
+      "materials": [
+        {
+          "driveFile": {
+            "driveFile": {
+              "id": "drive_pdf_lesson",
+              "title": "lesson-text.pdf"
+            },
+            "shareMode": "VIEW"
+          }
+        }
+      ],
+      "state": "PUBLISHED",
+      "title": "Consignes générales (inventées)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-03T14:00:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/m_0002",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-03T16:00:00Z",
+      "description": "Les enfants chantent une chanson.",
+      "id": "m_0002",
+      "materials": [
+        {
+          "driveFile": {
+            "driveFile": {
+              "id": "drive_slides_devoir",
+              "title": "devoir-slides"
+            },
+            "shareMode": "VIEW"
+          }
+        }
+      ],
+      "state": "PUBLISHED",
+      "title": "Diaporama du devoir (inventé)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-03T17:00:00.743Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/m_0003",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-03T19:00:00Z",
+      "description": "Le chat dort près de la fenêtre.",
+      "id": "m_0003",
+      "materials": [
+        {
+          "driveFile": {
+            "driveFile": {
+              "id": "drive_locked_doc",
+              "title": "verrouille"
+            },
+            "shareMode": "VIEW"
+          }
+        }
+      ],
+      "state": "PUBLISHED",
+      "title": "Document verrouillé (inventé)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-03T20:00:00.439349855Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/m_0004",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-03T22:00:00Z",
+      "description": "La boulangerie ouvre à sept heures.",
+      "id": "m_0004",
+      "materials": [
+        {
+          "driveFile": {
+            "driveFile": {
+              "id": "drive_doc_texte",
+              "title": "texte-lecture"
+            },
+            "shareMode": "VIEW"
+          }
+        }
+      ],
+      "state": "PUBLISHED",
+      "title": "Lecture du mardi (inventée)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-03T23:00:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/m_0005",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-04T01:00:00Z",
+      "description": "J’ai rendez-vous à onze heures.",
+      "id": "m_0005",
+      "materials": [
+        {
+          "driveFile": {
+            "driveFile": {
+              "id": "drive_image_phrase",
+              "title": "phrase.png"
+            },
+            "shareMode": "VIEW"
+          }
+        }
+      ],
+      "state": "PUBLISHED",
+      "title": "Image de la phrase (inventée)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-04T02:00:00.313Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/m_0006",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-04T04:00:00Z",
+      "description": "J’ai rendez-vous à onze heures.",
+      "id": "m_0006",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Rappel sin adjunto (inventé)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-04T05:00:00.624615162Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/m_0007",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-04T07:00:00Z",
+      "description": "J’ai rendez-vous à onze heures.",
+      "id": "m_0007",
+      "materials": [
+        {
+          "link": {
+            "title": "Guide",
+            "url": "https://example.test/guide"
+          }
+        }
+      ],
+      "state": "PUBLISHED",
+      "title": "Lien externe (inventé)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-04T08:00:00Z"
+    }
+  ]
+}
