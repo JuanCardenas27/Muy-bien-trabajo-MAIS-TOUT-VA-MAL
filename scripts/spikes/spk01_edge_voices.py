@@ -54,7 +54,9 @@ def build_parser() -> argparse.ArgumentParser:
     sub = p.add_subparsers(dest="cmd", required=True)
 
     p_list = sub.add_parser("list", help="listar voces fr-* como tabla Markdown")
-    p_list.add_argument("--locale-prefix", default="fr-", help="prefijo de Locale (por defecto fr-)")
+    p_list.add_argument(
+        "--locale-prefix", default="fr-", help="prefijo de Locale (por defecto fr-)"
+    )
 
     p_bench = sub.add_parser("bench", help="sintetizar N clips con concurrencia limitada")
     p_bench.add_argument("--concurrency", type=int, default=2, help="tamaño del Semaphore")
@@ -85,13 +87,16 @@ def _patch_edge_tts_ssl() -> None:
     import ssl
 
     cafile = os.environ.get("SSL_CERT_FILE")
-    ctx = ssl.create_default_context(cafile=cafile) if cafile and Path(cafile).exists() else ssl.create_default_context()
+    if cafile and Path(cafile).exists():
+        ctx = ssl.create_default_context(cafile=cafile)
+    else:
+        ctx = ssl.create_default_context()
     try:
         import edge_tts.communicate as _comm
         import edge_tts.voices as _voices
 
-        _comm._SSL_CTX = ctx  # noqa: SLF001 — parche documentado para el spike
-        _voices._SSL_CTX = ctx  # noqa: SLF001 — parche documentado para el spike
+        _comm._SSL_CTX = ctx
+        _voices._SSL_CTX = ctx
     except ImportError:
         pass
 
@@ -128,8 +133,7 @@ def _patch_ws_handshake_for_mitm_proxy() -> None:
                 new_headers = CIMultiDict(msg.headers)
                 new_headers["Connection"] = "Upgrade"
                 new_raw = tuple(
-                    (k, b"Upgrade" if k.lower() == b"connection" else v)
-                    for k, v in msg.raw_headers
+                    (k, b"Upgrade" if k.lower() == b"connection" else v) for k, v in msg.raw_headers
                 )
                 msg = msg._replace(
                     headers=new_headers,
@@ -137,7 +141,7 @@ def _patch_ws_handshake_for_mitm_proxy() -> None:
                     should_close=False,
                     upgrade=True,
                 )
-        except Exception:  # noqa: BLE001 — ante la duda, handshake original
+        except Exception:
             pass
         return msg
 
@@ -189,7 +193,9 @@ async def _synth_one(text: str, voice: str, out: Path) -> float:
     return time.perf_counter() - t0
 
 
-async def _bench_async(text: str, voices: list[str], out_dir: Path, concurrency: int, clips: int) -> list[dict]:
+async def _bench_async(
+    text: str, voices: list[str], out_dir: Path, concurrency: int, clips: int
+) -> list[dict]:
     sem = asyncio.Semaphore(concurrency)
 
     async def one(i: int) -> dict:
@@ -200,9 +206,22 @@ async def _bench_async(text: str, voices: list[str], out_dir: Path, concurrency:
             t0 = time.perf_counter()
             try:
                 await _synth_one(text, voice, out)
-                return {"i": i, "voice": voice, "file": fname, "ok": True, "seconds": time.perf_counter() - t0}
-            except Exception as e:  # noqa: BLE001 — el bench registra el error, no lo propaga
-                return {"i": i, "voice": voice, "file": fname, "ok": False, "seconds": time.perf_counter() - t0, "error": f"{type(e).__name__}: {e}"}
+                return {
+                    "i": i,
+                    "voice": voice,
+                    "file": fname,
+                    "ok": True,
+                    "seconds": time.perf_counter() - t0,
+                }
+            except Exception as e:
+                return {
+                    "i": i,
+                    "voice": voice,
+                    "file": fname,
+                    "ok": False,
+                    "seconds": time.perf_counter() - t0,
+                    "error": f"{type(e).__name__}: {e}",
+                }
 
     return list(await asyncio.gather(*[one(i) for i in range(clips)]))
 
@@ -245,19 +264,23 @@ def cmd_bench(concurrency: int, clips: int, text: str, out_dir: str | None) -> i
     print("")
     print("| concurrency | clips | ok | latency_mean_s | latency_p95_s | error_rate |")
     print("| --- | --- | --- | --- | --- | --- |")
-    print(f"| {concurrency} | {clips} | {len(ok)}/{len(results)} | {mean:.3f} | {p95:.3f} | {err_rate:.3f} |")
+    ok = [r for r in results if r["ok"]]
+    row = (
+        f"| {concurrency} | {clips} | {len(ok)}/{len(results)} "
+        f"| {mean:.3f} | {p95:.3f} | {err_rate:.3f} |"
+    )
+    print(row)
     return 0
 
 
 def _resolve_probe_target(path: str | None) -> Path:
     if path:
         p = Path(path)
-        if not p.is_absolute():
+        if not p.is_absolute() and not p.exists():
             # relativo al cwd; si no existe, probar relativo a la raíz del repo
-            if not p.exists():
-                alt = repo_root() / p
-                if alt.exists():
-                    return alt
+            alt = repo_root() / p
+            if alt.exists():
+                return alt
         return p
     cache = default_cache_dir()
     mp3s = sorted(cache.glob("*.mp3"))

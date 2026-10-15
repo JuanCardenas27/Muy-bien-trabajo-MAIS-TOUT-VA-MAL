@@ -52,6 +52,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
 import json
 import os
 import platform
@@ -126,6 +127,7 @@ ENGINES = ("chatterbox", "xtts")
 # ---------------------------------------------------------------------------
 # Rutas
 # ---------------------------------------------------------------------------
+
 
 def repo_root() -> Path:
     # scripts/spikes/spk03_clone_bench.py -> root = parents[2]
@@ -268,6 +270,7 @@ def wav_duration_s(path: Path) -> float:
 # Red / TLS del sandbox
 # ---------------------------------------------------------------------------
 
+
 def ensure_tls_trust() -> None:
     """Hace confiable el CA del proxy de salida en este entorno.
 
@@ -304,7 +307,7 @@ def ensure_tls_trust() -> None:
             if ca.strip() not in data:
                 with open(bundle, "ab") as fh:
                     fh.write(ca if data.endswith(b"\n") else b"\n" + ca)
-    except Exception as exc:  # noqa: BLE001 - el benchmark sigue sin el parche
+    except Exception as exc:
         print(f"AVISO TLS: no se pudo parchar certifi ({exc})", file=sys.stderr)
     if bundle_path is not None:
         os.environ.setdefault("SSL_CERT_FILE", bundle_path)
@@ -315,6 +318,7 @@ def ensure_tls_trust() -> None:
 # ---------------------------------------------------------------------------
 # make-ref: referencia Edge-TTS -> ref.wav 24 kHz mono
 # ---------------------------------------------------------------------------
+
 
 class _Ws:
     """WebSocket minimo (RFC 6455) sobre un socket ya con handshake 101.
@@ -367,10 +371,7 @@ class _Ws:
                 (ln,) = struct.unpack("!H", self._read_exactly(2))
             elif ln == 127:
                 (ln,) = struct.unpack("!Q", self._read_exactly(8))
-            if b2 & 0x80:
-                mask = self._read_exactly(4)
-            else:
-                mask = None
+            mask = self._read_exactly(4) if b2 & 0x80 else None
             payload = self._read_exactly(ln) if ln else b""
             if mask:
                 payload = bytes(b ^ mask[i % 4] for i, b in enumerate(payload))
@@ -422,8 +423,7 @@ def _edge_socket(path_query: str, headers: dict[str, str]) -> socket.socket:
                 + "\r\n"
             )
         sock.sendall(
-            f"CONNECT {host}:{port} HTTP/1.1\r\nHost: {host}:{port}\r\n"
-            f"{creds}\r\n".encode()
+            f"CONNECT {host}:{port} HTTP/1.1\r\nHost: {host}:{port}\r\n{creds}\r\n".encode()
         )
         resp = b""
         while b"\r\n\r\n" not in resp:
@@ -444,8 +444,13 @@ def _edge_socket(path_query: str, headers: dict[str, str]) -> socket.socket:
         "Sec-WebSocket-Version: 13\r\n"
     )
     for k, v in headers.items():
-        if k.lower() in ("sec-websocket-version", "upgrade", "connection",
-                         "sec-websocket-key", "host"):
+        if k.lower() in (
+            "sec-websocket-version",
+            "upgrade",
+            "connection",
+            "sec-websocket-key",
+            "host",
+        ):
             continue
         req += f"{k}: {v}\r\n"
     req += "\r\n"
@@ -493,9 +498,7 @@ async def _edge_save(text: str, voice: str, mp3_path: Path) -> None:
         f"&Sec-MS-GEC-Version={SEC_MS_GEC_VERSION}"
     )
     config = TTSConfig(voice, "+0%", "+0%", "+0Hz", "SentenceBoundary")
-    texts = list(
-        split_text_by_byte_length(escape(remove_incompatible_characters(text)), 4096)
-    )
+    texts = list(split_text_by_byte_length(escape(remove_incompatible_characters(text)), 4096))
     if not texts:
         raise NoAudioReceived("texto vacio: nada que sintetizar")
 
@@ -514,9 +517,7 @@ async def _edge_save(text: str, voice: str, mp3_path: Path) -> None:
             audio_was_received = False
             for partial in texts:
                 ws.send_text(
-                    ssml_headers_plus_data(
-                        connect_id(), date_to_string(), mkssml(config, partial)
-                    )
+                    ssml_headers_plus_data(connect_id(), date_to_string(), mkssml(config, partial))
                 )
                 while True:
                     msg = ws.recv()
@@ -544,9 +545,7 @@ async def _edge_save(text: str, voice: str, mp3_path: Path) -> None:
                         fh.write(data)
                     else:
                         encoded = msg.encode("utf-8")
-                        parameters, _data = get_headers_and_data(
-                            encoded, encoded.find(b"\r\n\r\n")
-                        )
+                        parameters, _data = get_headers_and_data(encoded, encoded.find(b"\r\n\r\n"))
                         path = parameters.get(b"Path", None)
                         if path == b"turn.end":
                             break
@@ -555,10 +554,8 @@ async def _edge_save(text: str, voice: str, mp3_path: Path) -> None:
             if not audio_was_received:
                 raise NoAudioReceived("el servicio no devolvio audio")
     finally:
-        try:
+        with contextlib.suppress(OSError):
             sock.close()
-        except OSError:
-            pass
 
 
 def cmd_make_ref(voice: str = VOICE_REF) -> Path:
@@ -568,9 +565,18 @@ def cmd_make_ref(voice: str = VOICE_REF) -> Path:
         mp3 = Path(tmp) / "ref.mp3"
         asyncio.run(_edge_save(REF_TEXT, voice, mp3))
         cmd = [
-            "ffmpeg", "-y", "-v", "error",
-            "-i", str(mp3),
-            "-ar", str(TARGET_SR), "-ac", "1", "-c:a", "pcm_s16le",
+            "ffmpeg",
+            "-y",
+            "-v",
+            "error",
+            "-i",
+            str(mp3),
+            "-ar",
+            str(TARGET_SR),
+            "-ac",
+            "1",
+            "-c:a",
+            "pcm_s16le",
             str(out),
         ]
         subprocess.run(cmd, check=True)
@@ -643,6 +649,7 @@ SYNTH = {"chatterbox": synth_chatterbox, "xtts": synth_xtts}
 # run: benchmark completo de un motor
 # ---------------------------------------------------------------------------
 
+
 def transcribe_clip(model: object, clip: Path) -> str:
     segments, _info = model.transcribe(str(clip), language="fr")  # type: ignore[union-attr]
     return "".join(s.text for s in segments).strip()
@@ -684,7 +691,7 @@ def cmd_run(engine: str, limit: int = len(PHRASES)) -> Path:
 
     from faster_whisper import WhisperModel
 
-    print(f"cargando faster-whisper small (int8, cpu) ...", flush=True)
+    print("cargando faster-whisper small (int8, cpu) ...", flush=True)
     whisper = WhisperModel("small", device="cpu", compute_type="int8")
 
     import jiwer
@@ -817,7 +824,7 @@ def cmd_requant(engine: str, limit: int = 10) -> Path:
                 f"log={t['log_cer']:.3f} (se conserva el re-calculado).",
                 file=sys.stderr,
             )
-        ram_bytes = int(round(t["ram_gb"] * 1e9))
+        ram_bytes = round(t["ram_gb"] * 1e9)
         rows.append(
             {
                 "id": i,
@@ -868,6 +875,7 @@ def cmd_requant(engine: str, limit: int = 10) -> Path:
 # report: tabla Markdown uniendo los JSON
 # ---------------------------------------------------------------------------
 
+
 def _fmt(x: object) -> str:
     if x is None:
         return "n/a"
@@ -885,7 +893,8 @@ def cmd_report() -> None:
     if not found:
         raise SystemExit("no hay JSON de benchmark en .cache/spikes/spk03/ (corre run primero)")
     lines = [
-        "| motor | s/clip medio | RTF medio | RAM pico GB | CER medio | % CER>0.15 (todas) | % CER>0.15 (1-3 palabras) | n |",
+        "| motor | s/clip medio | RTF medio | RAM pico GB | CER medio | "
+        "% CER>0.15 (todas) | % CER>0.15 (1-3 palabras) | n |",
         "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for engine, payload in found.items():
@@ -893,7 +902,8 @@ def cmd_report() -> None:
         lines.append(
             f"| {engine} | {s['s_per_clip_mean']:.1f} | {s['rtf_mean']:.2f} | "
             f"{s['ram_peak_gb']:.2f} | {_fmt(s['cer_mean'])} | "
-            f"{100 * s['pct_cer_gt_015_all']:.0f}% | {100 * s['pct_cer_gt_015_short']:.0f}% | {s['n']} |"
+            f"{100 * s['pct_cer_gt_015_all']:.0f}% | "
+            f"{100 * s['pct_cer_gt_015_short']:.0f}% | {s['n']} |"
         )
     print("\n".join(lines))
     for engine, payload in found.items():
@@ -905,10 +915,15 @@ def cmd_report() -> None:
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(description="SPK-03: benchmark de clonacion en CPU")
-    ap.add_argument("--engine", choices=list(ENGINES), default=None,
-                    help="motor (requerido por el subcomando run)")
+    ap.add_argument(
+        "--engine",
+        choices=list(ENGINES),
+        default=None,
+        help="motor (requerido por el subcomando run)",
+    )
     sub = ap.add_subparsers(dest="cmd", required=True)
     p_ref = sub.add_parser("make-ref", help="generar ref.wav con Edge-TTS")
     p_ref.add_argument("--voice", default=VOICE_REF)
