@@ -1,0 +1,31 @@
+{
+  "courses": [
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3",
+      "courseState": "ACTIVE",
+      "creationTime": "2026-07-04T13:00:00Z",
+      "id": "cours_fr_a2_g3",
+      "name": "Français A2 – Groupe 3",
+      "section": "Groupe 3 (inventé)",
+      "updateTime": "2026-08-03T13:00:00.744Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_calc_1",
+      "courseState": "ACTIVE",
+      "creationTime": "2026-06-24T13:00:00Z",
+      "id": "cours_calc_1",
+      "name": "Cálculo Diferencial",
+      "section": null,
+      "updateTime": "2026-08-03T13:00:00.558Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a1_2025",
+      "courseState": "ARCHIVED",
+      "creationTime": "2025-06-29T13:00:00Z",
+      "id": "cours_fr_a1_2025",
+      "name": "Français A1 – 2025",
+      "section": null,
+      "updateTime": "2026-08-03T13:00:00.179Z"
+    }
+  ]
+}

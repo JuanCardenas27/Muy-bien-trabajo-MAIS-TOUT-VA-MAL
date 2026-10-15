@@ -1,0 +1,786 @@
+{
+  "$defs": {
+    "AttachmentOut": {
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FileRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "item_id": {
+          "title": "Item Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "drive_file",
+            "link",
+            "youtube",
+            "form"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "mime_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Mime Type"
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "downloaded",
+            "reference",
+            "skipped_too_large",
+            "forbidden",
+            "not_found",
+            "error"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Title"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Url"
+        },
+        "view_pdf": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FileRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "item_id",
+        "kind",
+        "title",
+        "url",
+        "mime_type",
+        "status",
+        "file",
+        "view_pdf"
+      ],
+      "title": "AttachmentOut",
+      "type": "object"
+    },
+    "AudioPending": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "enum": [
+            "front",
+            "example"
+          ],
+          "title": "Field",
+          "type": "string"
+        },
+        "voice_id": {
+          "title": "Voice Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "voice_id"
+      ],
+      "title": "AudioPending",
+      "type": "object"
+    },
+    "AudioRef": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "enum": [
+            "front",
+            "example"
+          ],
+          "title": "Field",
+          "type": "string"
+        },
+        "file": {
+          "$ref": "#/$defs/FileRef"
+        },
+        "voice_id": {
+          "title": "Voice Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "voice_id",
+        "file"
+      ],
+      "title": "AudioRef",
+      "type": "object"
+    },
+    "CardOut": {
+      "additionalProperties": false,
+      "properties": {
+        "audio": {
+          "items": {
+            "$ref": "#/$defs/AudioRef"
+          },
+          "title": "Audio",
+          "type": "array"
+        },
+        "audio_pending": {
+          "items": {
+            "$ref": "#/$defs/AudioPending"
+          },
+          "title": "Audio Pending",
+          "type": "array"
+        },
+        "back_es": {
+          "title": "Back Es",
+          "type": "string"
+        },
+        "example_es": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Example Es"
+        },
+        "example_fr": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Example Fr"
+        },
+        "front_fr": {
+          "title": "Front Fr",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "ipa": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ipa"
+        },
+        "kind": {
+          "enum": [
+            "vocab",
+            "phrase",
+            "grammar",
+            "conjugation",
+            "drill"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Notes"
+        },
+        "phonemes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Phonemes",
+          "type": "array"
+        },
+        "source_item_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Item Ids",
+          "type": "array"
+        },
+        "stale": {
+          "title": "Stale",
+          "type": "boolean"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "front_fr",
+        "back_es",
+        "example_fr",
+        "example_es",
+        "notes",
+        "ipa",
+        "phonemes",
+        "tags",
+        "stale",
+        "source_item_ids",
+        "audio",
+        "audio_pending"
+      ],
+      "title": "CardOut",
+      "type": "object"
+    },
+    "CourseOut": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "section": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Section"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "section"
+      ],
+      "title": "CourseOut",
+      "type": "object"
+    },
+    "DrillDeck": {
+      "additionalProperties": false,
+      "properties": {
+        "card_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Card Ids",
+          "type": "array"
+        },
+        "curated": {
+          "title": "Curated",
+          "type": "boolean"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "phoneme": {
+          "title": "Phoneme",
+          "type": "string"
+        },
+        "title_es": {
+          "title": "Title Es",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "phoneme",
+        "title_es",
+        "card_ids",
+        "curated"
+      ],
+      "title": "DrillDeck",
+      "type": "object"
+    },
+    "Example": {
+      "additionalProperties": false,
+      "properties": {
+        "es": {
+          "title": "Es",
+          "type": "string"
+        },
+        "fr": {
+          "title": "Fr",
+          "type": "string"
+        }
+      },
+      "required": [
+        "fr",
+        "es"
+      ],
+      "title": "Example",
+      "type": "object"
+    },
+    "FileRef": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "mime": {
+          "title": "Mime",
+          "type": "string"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size": {
+          "title": "Size",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "size",
+        "mime",
+        "sha256"
+      ],
+      "title": "FileRef",
+      "type": "object"
+    },
+    "GrammarPoint": {
+      "additionalProperties": false,
+      "properties": {
+        "examples": {
+          "items": {
+            "$ref": "#/$defs/Example"
+          },
+          "title": "Examples",
+          "type": "array"
+        },
+        "explanation_es": {
+          "title": "Explanation Es",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "explanation_es",
+        "examples"
+      ],
+      "title": "GrammarPoint",
+      "type": "object"
+    },
+    "ItemOut": {
+      "additionalProperties": false,
+      "properties": {
+        "alternate_link": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Alternate Link"
+        },
+        "attachment_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Attachment Ids",
+          "type": "array"
+        },
+        "card_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Card Ids",
+          "type": "array"
+        },
+        "course_id": {
+          "title": "Course Id",
+          "type": "string"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "due_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Due At"
+        },
+        "first_seen_at": {
+          "title": "First Seen At",
+          "type": "string"
+        },
+        "has_sheet": {
+          "title": "Has Sheet",
+          "type": "boolean"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "coursework",
+            "material",
+            "announcement"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "text_lang": {
+          "enum": [
+            "fr",
+            "es",
+            "en",
+            "mixed",
+            "unknown"
+          ],
+          "title": "Text Lang",
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Title"
+        },
+        "topic_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Topic Id"
+        },
+        "updated_at": {
+          "title": "Updated At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "course_id",
+        "kind",
+        "topic_id",
+        "title",
+        "text",
+        "text_lang",
+        "created_at",
+        "updated_at",
+        "first_seen_at",
+        "due_at",
+        "alternate_link",
+        "attachment_ids",
+        "card_ids",
+        "has_sheet"
+      ],
+      "title": "ItemOut",
+      "type": "object"
+    },
+    "SpeechCredentials": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "locale": {
+          "const": "fr-FR",
+          "default": "fr-FR",
+          "title": "Locale",
+          "type": "string"
+        },
+        "region": {
+          "title": "Region",
+          "type": "string"
+        }
+      },
+      "required": [
+        "region",
+        "key"
+      ],
+      "title": "SpeechCredentials",
+      "type": "object"
+    },
+    "StudySheet": {
+      "additionalProperties": false,
+      "properties": {
+        "grammar": {
+          "items": {
+            "$ref": "#/$defs/GrammarPoint"
+          },
+          "title": "Grammar",
+          "type": "array"
+        },
+        "item_id": {
+          "title": "Item Id",
+          "type": "string"
+        },
+        "key_phrases": {
+          "items": {
+            "$ref": "#/$defs/Example"
+          },
+          "title": "Key Phrases",
+          "type": "array"
+        },
+        "summary_es": {
+          "title": "Summary Es",
+          "type": "string"
+        },
+        "vocab_card_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Vocab Card Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "item_id",
+        "summary_es",
+        "vocab_card_ids",
+        "grammar",
+        "key_phrases"
+      ],
+      "title": "StudySheet",
+      "type": "object"
+    },
+    "TopicOut": {
+      "additionalProperties": false,
+      "properties": {
+        "course_id": {
+          "title": "Course Id",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "course_id",
+        "name"
+      ],
+      "title": "TopicOut",
+      "type": "object"
+    },
+    "VoiceOut": {
+      "additionalProperties": false,
+      "properties": {
+        "accent": {
+          "title": "Accent",
+          "type": "string"
+        },
+        "age": {
+          "enum": [
+            "adult",
+            "teen",
+            "child"
+          ],
+          "title": "Age",
+          "type": "string"
+        },
+        "gender": {
+          "enum": [
+            "female",
+            "male"
+          ],
+          "title": "Gender",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "age",
+        "gender",
+        "accent"
+      ],
+      "title": "VoiceOut",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "attachments": {
+      "items": {
+        "$ref": "#/$defs/AttachmentOut"
+      },
+      "title": "Attachments",
+      "type": "array"
+    },
+    "cards": {
+      "items": {
+        "$ref": "#/$defs/CardOut"
+      },
+      "title": "Cards",
+      "type": "array"
+    },
+    "courses": {
+      "items": {
+        "$ref": "#/$defs/CourseOut"
+      },
+      "title": "Courses",
+      "type": "array"
+    },
+    "drills": {
+      "items": {
+        "$ref": "#/$defs/DrillDeck"
+      },
+      "title": "Drills",
+      "type": "array"
+    },
+    "generated_at": {
+      "title": "Generated At",
+      "type": "string"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/ItemOut"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "sheets": {
+      "items": {
+        "$ref": "#/$defs/StudySheet"
+      },
+      "title": "Sheets",
+      "type": "array"
+    },
+    "speech": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SpeechCredentials"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "topics": {
+      "items": {
+        "$ref": "#/$defs/TopicOut"
+      },
+      "title": "Topics",
+      "type": "array"
+    },
+    "voices": {
+      "items": {
+        "$ref": "#/$defs/VoiceOut"
+      },
+      "title": "Voices",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "generated_at",
+    "courses",
+    "topics",
+    "items",
+    "attachments",
+    "cards",
+    "sheets",
+    "voices",
+    "drills",
+    "speech"
+  ],
+  "title": "ContentIndex",
+  "type": "object"
+}
