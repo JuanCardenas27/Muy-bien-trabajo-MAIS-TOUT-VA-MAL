@@ -1,0 +1,55 @@
+:root {
+  --c-bg: #ffffff;
+  --c-surface: #f4f5f7;
+  --c-text: #1b1f24;
+  --c-text-muted: #4b5563;
+  --c-accent: #1d4ed8;
+  --c-on-accent: #ffffff;
+  --c-danger: #b42318;
+  --c-score-excellent: #166534;
+  --c-score-good: #1e3a8a;
+  --c-score-improve: #92400e;
+  --c-score-repeat: #b42318;
+  --focus-ring: 3px solid #1d4ed8;
+}
+
+body {
+  background-color: var(--c-bg);
+  color: var(--c-text);
+}
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.fr-shell-skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+}
+
+.fr-shell-skip:focus-visible {
+  left: 0;
+}
+
+@media (max-width: 899px) {
+  .fr-shell-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+}
+
+@media (min-width: 900px) {
+  .fr-shell {
+    display: flex;
+  }
+
+  .fr-shell-nav {
+    position: sticky;
+    top: 0;
+    min-height: 100vh;
+  }
+}

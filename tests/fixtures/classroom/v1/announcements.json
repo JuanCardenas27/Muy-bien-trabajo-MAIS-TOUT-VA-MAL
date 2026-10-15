@@ -1,0 +1,74 @@
+{
+  "announcements": [
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/a_0001",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-03T14:00:00Z",
+      "id": "a_0001",
+      "materials": [
+        {
+          "driveFile": {
+            "driveFile": {
+              "id": "drive_doc_texte",
+              "title": "texte-lecture"
+            },
+            "shareMode": "VIEW"
+          }
+        }
+      ],
+      "state": "PUBLISHED",
+      "text": "Les enfants chantent une chanson.",
+      "updateTime": "2026-08-03T15:00:00.621940814Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/a_0002",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-03T19:00:00Z",
+      "id": "a_0002",
+      "materials": [],
+      "state": "PUBLISHED",
+      "text": "Les enfants chantent une chanson.",
+      "updateTime": "2026-08-03T20:00:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/a_0003",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-04T00:00:00Z",
+      "id": "a_0003",
+      "materials": [],
+      "state": "PUBLISHED",
+      "text": "Nous allons au marché demain.",
+      "updateTime": "2026-08-04T01:00:00.442Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/a_0004",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-04T05:00:00Z",
+      "id": "a_0004",
+      "materials": [],
+      "state": "PUBLISHED",
+      "text": "Un bon vin blanc accompagne le repas.",
+      "updateTime": "2026-08-04T06:00:00.405181176Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/a_0005",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-04T10:00:00Z",
+      "id": "a_0005",
+      "materials": [],
+      "state": "PUBLISHED",
+      "text": "Il fait beau en France.",
+      "updateTime": "2026-08-04T11:00:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/a_0006",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-04T15:00:00Z",
+      "id": "a_0006",
+      "materials": [],
+      "state": "PUBLISHED",
+      "text": "Les enfants chantent une chanson.",
+      "updateTime": "2026-08-04T16:00:00.932Z"
+    }
+  ]
+}
