@@ -15,9 +15,7 @@ _SENTENCE_RE = re.compile(r"(?<=[.!?])\s+")
 @lru_cache(maxsize=1)
 def _detector() -> LanguageDetector:
     return (
-        LanguageDetectorBuilder.from_languages(
-            Language.FRENCH, Language.SPANISH, Language.ENGLISH
-        )
+        LanguageDetectorBuilder.from_languages(Language.FRENCH, Language.SPANISH, Language.ENGLISH)
         .with_minimum_relative_distance(0.1)
         .build()
     )
