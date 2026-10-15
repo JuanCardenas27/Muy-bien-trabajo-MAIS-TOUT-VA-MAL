@@ -37,8 +37,7 @@ def list_fetch_candidates(conn: sqlite3.Connection) -> list[FetchCandidate]:
 def insert_blob(conn: sqlite3.Connection, sha256: str, size: int, mime_type: str, now: str) -> None:
     """Registra un blob; si el sha ya existe no hace nada."""
     conn.execute(
-        "INSERT OR IGNORE INTO blobs (sha256, size, mime_type, created_at)"
-        " VALUES (?, ?, ?, ?)",
+        "INSERT OR IGNORE INTO blobs (sha256, size, mime_type, created_at) VALUES (?, ?, ?, ?)",
         (sha256, size, mime_type, now),
     )
 

@@ -1,6 +1,7 @@
 """Etapa fetch: descarga/export de adjuntos de Drive al BlobStore."""
 
 from pathlib import Path
+from typing import BinaryIO
 
 import httpx
 import typer
@@ -73,7 +74,12 @@ def _fetch_binary(
     if meta.size is not None and meta.size > max_bytes:
         mb = ctx.settings.classroom.max_download_mb
         _set_status(
-            ctx, cand.id, "skipped_too_large", f"supera el tope de {mb} MB", now, counts,
+            ctx,
+            cand.id,
+            "skipped_too_large",
+            f"supera el tope de {mb} MB",
+            now,
+            counts,
             "fetch.skipped_too_large",
         )
         return
@@ -84,17 +90,32 @@ def _fetch_binary(
     except (TooLargeError, BlobTooLargeError):
         mb = ctx.settings.classroom.max_download_mb
         _set_status(
-            ctx, cand.id, "skipped_too_large", f"supera el tope de {mb} MB", now, counts,
+            ctx,
+            cand.id,
+            "skipped_too_large",
+            f"supera el tope de {mb} MB",
+            now,
+            counts,
             "fetch.skipped_too_large",
         )
     except NotFoundError:
         _set_status(
-            ctx, cand.id, "not_found", "archivo de Drive no encontrado", now, counts,
+            ctx,
+            cand.id,
+            "not_found",
+            "archivo de Drive no encontrado",
+            now,
+            counts,
             "fetch.not_found",
         )
     except ForbiddenError:
         _set_status(
-            ctx, cand.id, "forbidden", "descarga no permitida en Drive", now, counts,
+            ctx,
+            cand.id,
+            "forbidden",
+            "descarga no permitida en Drive",
+            now,
+            counts,
             "fetch.forbidden",
         )
     except (FrancesError, httpx.HTTPError) as exc:
@@ -105,9 +126,15 @@ def _fetch_binary(
         with ctx.store.tx() as conn:
             insert_blob(conn, sha, size, meta.mime_type, now)
             mark_downloaded(
-                conn, cand.id, blob_sha256=sha, export_pdf_sha256=None,
-                export_text_sha256=None, mime_type=meta.mime_type, title=meta.name,
-                drive_version=meta.version, now=now,
+                conn,
+                cand.id,
+                blob_sha256=sha,
+                export_pdf_sha256=None,
+                export_text_sha256=None,
+                mime_type=meta.mime_type,
+                title=meta.name,
+                drive_version=meta.version,
+                now=now,
             )
         counts["fetch.downloaded"] += 1
 
@@ -132,11 +159,12 @@ def _fetch_native(
     pdf_sha: str | None = None
     text_sha: str | None = None
     for exp_mime, role in table:
+
+        def _write(f: BinaryIO, mime: str = exp_mime) -> int:
+            return drive.export(cand.external_id, mime, f, max_bytes)
+
         try:
-            sha, size = blobs.put_stream(
-                lambda f, mime=exp_mime: drive.export(cand.external_id, mime, f, max_bytes),
-                max_bytes,
-            )
+            sha, size = blobs.put_stream(_write, max_bytes)
         except ExportTooLargeError:
             if role == "view":
                 counts["fetch.export_pdf_skipped"] += 1
@@ -151,19 +179,34 @@ def _fetch_native(
         except (TooLargeError, BlobTooLargeError):
             mb = ctx.settings.classroom.max_download_mb
             _set_status(
-                ctx, cand.id, "skipped_too_large", f"supera el tope de {mb} MB", now, counts,
+                ctx,
+                cand.id,
+                "skipped_too_large",
+                f"supera el tope de {mb} MB",
+                now,
+                counts,
                 "fetch.skipped_too_large",
             )
             return
         except NotFoundError:
             _set_status(
-                ctx, cand.id, "not_found", "archivo de Drive no encontrado", now, counts,
+                ctx,
+                cand.id,
+                "not_found",
+                "archivo de Drive no encontrado",
+                now,
+                counts,
                 "fetch.not_found",
             )
             return
         except ForbiddenError:
             _set_status(
-                ctx, cand.id, "forbidden", "descarga no permitida en Drive", now, counts,
+                ctx,
+                cand.id,
+                "forbidden",
+                "descarga no permitida en Drive",
+                now,
+                counts,
                 "fetch.forbidden",
             )
             return
@@ -182,9 +225,15 @@ def _fetch_native(
             text_sha = sha
     with ctx.store.tx() as conn:
         mark_downloaded(
-            conn, cand.id, blob_sha256=None, export_pdf_sha256=pdf_sha,
-            export_text_sha256=text_sha, mime_type=meta.mime_type, title=meta.name,
-            drive_version=meta.version, now=now,
+            conn,
+            cand.id,
+            blob_sha256=None,
+            export_pdf_sha256=pdf_sha,
+            export_text_sha256=text_sha,
+            mime_type=meta.mime_type,
+            title=meta.name,
+            drive_version=meta.version,
+            now=now,
         )
     counts["fetch.downloaded"] += 1
 
@@ -204,13 +253,23 @@ def _fetch_one(
         meta = drive.get_metadata(cand.external_id)
     except NotFoundError:
         _set_status(
-            ctx, cand.id, "not_found", "archivo de Drive no encontrado", now, counts,
+            ctx,
+            cand.id,
+            "not_found",
+            "archivo de Drive no encontrado",
+            now,
+            counts,
             "fetch.not_found",
         )
         return
     except ForbiddenError:
         _set_status(
-            ctx, cand.id, "forbidden", "descarga no permitida en Drive", now, counts,
+            ctx,
+            cand.id,
+            "forbidden",
+            "descarga no permitida en Drive",
+            now,
+            counts,
             "fetch.forbidden",
         )
         return
@@ -221,7 +280,12 @@ def _fetch_one(
         return
     if not meta.can_download:
         _set_status(
-            ctx, cand.id, "forbidden", "descarga no permitida en Drive", now, counts,
+            ctx,
+            cand.id,
+            "forbidden",
+            "descarga no permitida en Drive",
+            now,
+            counts,
             "fetch.forbidden",
         )
         return
@@ -256,8 +320,9 @@ def run_fetch(ctx: StageContext) -> StageReport:
         + counts["fetch.error"]
         + counts["fetch.export_pdf_skipped"]
     )
-    report = StageReport(stage="fetch", status="partial" if partial else "ok", counts=counts,
-                         errors=errors)
+    report = StageReport(
+        stage="fetch", status="partial" if partial else "ok", counts=counts, errors=errors
+    )
     with ctx.store.tx() as conn:
         record_run(conn, report, started_at, format_ts(ctx.now()))
     return report

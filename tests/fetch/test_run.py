@@ -13,16 +13,20 @@ from typing import Any
 
 import httpx
 import respx
+import typer
+from typer.testing import CliRunner
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "fixtures"))
 
-from google_mock import FRENCH_COURSE_ID, install_google_mocks  # noqa: E402
+from google_mock import FRENCH_COURSE_ID, install_google_mocks
 
-from frances.fetch.drive import NATIVE_PREFIX, DriveClient  # noqa: E402
-from frances.fetch.run import run_fetch  # noqa: E402
-from frances.models.ids import attachment_id, item_id  # noqa: E402
-from frances.stage import StageContext, make_context  # noqa: E402
-from frances.timeutil import format_ts, norm_ts  # noqa: E402
+from frances.fetch import run as run_mod
+from frances.fetch.drive import NATIVE_PREFIX, DriveClient
+from frances.fetch.run import run_fetch
+from frances.models.ids import attachment_id, item_id
+from frances.stage import StageContext, make_context
+from frances.sync.google_http import ForbiddenError, NotFoundError
+from frances.timeutil import format_ts, norm_ts
 
 FAKE_ENV = {
     "GOOGLE_CLIENT_ID": "cid",
@@ -105,9 +109,7 @@ def first_id(
 
 
 def slides_ids(meta: dict[str, dict[str, Any] | None]) -> list[str]:
-    return [
-        i for i, m in meta.items() if m and m["mimeType"] == "application/vnd.google-apps.presentation"
-    ]
+    return [i for i, m in meta.items() if m and m["mimeType"].endswith(".presentation")]
 
 
 def expected_status(m: dict[str, Any] | None) -> str:
@@ -127,7 +129,9 @@ def mocks(scenario: str) -> Iterator[respx.Router]:
         yield router
 
 
-def _row_dict(conn: sqlite3.Connection, table: str, where: str, args: tuple[object, ...]) -> dict[str, Any]:
+def _row_dict(
+    conn: sqlite3.Connection, table: str, where: str, args: tuple[object, ...]
+) -> dict[str, Any]:
     cur = conn.execute(f"SELECT * FROM {table} WHERE {where}", args)
     names = [d[0] for d in cur.description]
     row = cur.fetchone()
@@ -228,7 +232,8 @@ def blob_rows(ctx: StageContext) -> int:
 
 def with_max_download_mb(ctx: StageContext, n: int) -> StageContext:
     classroom = ctx.settings.classroom.model_copy(update={"max_download_mb": n})
-    return dataclasses.replace(ctx, settings=ctx.settings.model_copy(update={"classroom": classroom}))
+    settings = ctx.settings.model_copy(update={"classroom": classroom})
+    return dataclasses.replace(ctx, settings=settings)
 
 
 def item_without(ctx: StageContext, _file_id: str) -> str:
@@ -272,7 +277,8 @@ def test_fetch_v1_outcomes_match_fixture(tmp_path: Path) -> None:
     with mocks("v1"):
         rep = run_fetch(ctx)
     want = {i: expected_status(m) for i, m in meta.items()}
-    assert {i: {a["status"] for a in atts(ctx, i)} for i in meta} == {i: {s} for i, s in want.items()}
+    got = {i: {a["status"] for a in atts(ctx, i)} for i in meta}
+    assert got == {i: {s} for i, s in want.items()}
     assert rep.counts["fetch.checked"] == sum(len(atts(ctx, i)) for i in meta)
     assert rep.counts["fetch.downloaded"] == sum(
         len(atts(ctx, i)) for i, s in want.items() if s == "downloaded"
@@ -289,7 +295,9 @@ def test_refetch_when_drive_version_changes(tmp_path: Path) -> None:  # REVIEW F
     changed = {
         i
         for i in v1
-        if v1[i] and v2.get(i) and v1[i]["version"] != v2[i]["version"]  # type: ignore[index]
+        if v1[i]
+        and v2.get(i)
+        and v1[i]["version"] != v2[i]["version"]  # type: ignore[index]
         and expected_status(v1[i]) == "downloaded"
     }
     pdf = next(i for i in changed if v1[i]["mimeType"] == "application/pdf")  # type: ignore[index]
@@ -315,7 +323,8 @@ def test_refetch_when_drive_version_changes(tmp_path: Path) -> None:  # REVIEW F
         for a in atts(ctx, pdf)
     )
     assert rep.counts["fetch.downloaded"] == sum(len(atts(ctx, i)) for i in changed)
-    assert rep.counts["fetch.unchanged"] == rep1.counts["fetch.downloaded"] - rep.counts["fetch.downloaded"]
+    prev_downloaded = rep1.counts["fetch.downloaded"]
+    assert rep.counts["fetch.unchanged"] == prev_downloaded - rep.counts["fetch.downloaded"]
 
 
 def test_forbidden_download_is_partial(tmp_path: Path) -> None:  # REVIEW FOCUS 4
@@ -338,9 +347,7 @@ def test_export_too_large_falls_back_to_text(tmp_path: Path) -> None:  # REVIEW 
         rep = run_fetch(ctx)
     rows = atts(ctx, slides)
     assert rows and all(
-        a["status"] == "downloaded"
-        and a["export_pdf_sha256"] is None
-        and a["export_text_sha256"]
+        a["status"] == "downloaded" and a["export_pdf_sha256"] is None and a["export_text_sha256"]
         for a in rows
     )
     # El mock rechaza todo export a PDF: cada nativo descargable pierde el PDF y suma uno.
@@ -362,11 +369,15 @@ def test_too_large_skipped_with_link(tmp_path: Path) -> None:  # REVIEW FOCUS 4
     binaries = [
         a
         for i, m in drive_meta("v1").items()
-        if expected_status(m) == "downloaded" and not m["mimeType"].startswith(NATIVE_PREFIX)  # type: ignore[index,union-attr]  # noqa: E501
+        if m is not None
+        and expected_status(m) == "downloaded"
+        and not m["mimeType"].startswith(NATIVE_PREFIX)
         for a in atts(ctx, i)
     ]
     assert binaries and all(
-        a["status"] == "skipped_too_large" and a["blob_sha256"] is None and a["url"].startswith("https://")
+        a["status"] == "skipped_too_large"
+        and a["blob_sha256"] is None
+        and a["url"].startswith("https://")
         for a in binaries
     )
     skipped = ctx.store.conn.execute(
@@ -387,9 +398,7 @@ def test_same_file_in_two_posts_single_blob(tmp_path: Path) -> None:
     assert len([p for p in (tmp_path / "blobs").rglob("*") if p.is_file()]) == blob_rows(ctx)
 
 
-def test_unexpected_error_bumps_attempts_and_redacts(
-    tmp_path: Path, monkeypatch: Any
-) -> None:
+def test_unexpected_error_bumps_attempts_and_redacts(tmp_path: Path, monkeypatch: Any) -> None:
     ctx = synced_ctx(tmp_path, "v1")
     meta = drive_meta("v1")
 
@@ -408,3 +417,73 @@ def test_unexpected_error_bumps_attempts_and_redacts(
     assert binaries and {(a["status"], a["attempts"]) for a in binaries} == {("error", 1)}
     assert rep.exit_code() == 2
     assert "ya29.fixture" not in " ".join(rep.errors)
+
+
+def test_fetch_cli_reports_partial(tmp_path: Path) -> None:
+    synced_ctx(tmp_path, "v1")
+    app = typer.Typer()
+    run_mod.register(app)
+    with mocks("v1"):
+        res = CliRunner(env=FAKE_ENV).invoke(app, ["fetch", "--data", str(tmp_path)])
+    assert res.exit_code == 2
+
+
+def test_native_export_not_found_is_partial(tmp_path: Path, monkeypatch: Any) -> None:
+    ctx = synced_ctx(tmp_path, "v1")
+    meta = drive_meta("v1")
+    real_export = DriveClient.export
+
+    def _gone(self: DriveClient, file_id: str, mime: str, dest: Any, max_bytes: int) -> int:
+        raise NotFoundError(f"Recurso no encontrado en Google: {file_id}")
+
+    monkeypatch.setattr(DriveClient, "export", _gone)
+    with mocks("v1"):
+        rep = run_fetch(ctx)
+    natives = [
+        a
+        for i, m in meta.items()
+        if m is not None
+        and m["mimeType"].startswith(NATIVE_PREFIX)
+        and m["capabilities"]["canDownload"]
+        for a in atts(ctx, i)
+    ]
+    assert natives and {a["status"] for a in natives} == {"not_found"}
+    gone = sum(len(atts(ctx, i)) for i, m in meta.items() if m is None)
+    assert rep.exit_code() == 2 and rep.counts["fetch.not_found"] == len(natives) + gone
+    assert real_export is not None
+
+
+def test_unsupported_native_mime_is_error(tmp_path: Path, monkeypatch: Any) -> None:
+    ctx = synced_ctx(tmp_path, "v1")
+    meta = drive_meta("v1")
+    monkeypatch.setattr(run_mod, "GOOGLE_NATIVE_EXPORTS", {})
+    with mocks("v1"):
+        rep = run_fetch(ctx)
+    natives = [
+        a
+        for i, m in meta.items()
+        if m is not None
+        and m["mimeType"].startswith(NATIVE_PREFIX)
+        and m["capabilities"]["canDownload"]
+        for a in atts(ctx, i)
+    ]
+    assert natives and {(a["status"], a["attempts"]) for a in natives} == {("error", 1)}
+    assert rep.exit_code() == 2 and rep.counts["fetch.error"] == len(natives)
+
+
+def test_metadata_forbidden_is_partial(tmp_path: Path, monkeypatch: Any) -> None:
+    ctx = synced_ctx(tmp_path, "v1")
+    meta = drive_meta("v1")
+    pdf = first_id(meta, mime="application/pdf", can_download=True)
+    real_get_metadata = DriveClient.get_metadata
+
+    def _denied(self: DriveClient, file_id: str) -> Any:
+        if file_id == pdf:
+            raise ForbiddenError("downloadRestricted")
+        return real_get_metadata(self, file_id)
+
+    monkeypatch.setattr(DriveClient, "get_metadata", _denied)
+    with mocks("v1"):
+        rep = run_fetch(ctx)
+    assert {a["status"] for a in atts(ctx, pdf)} == {"forbidden"}
+    assert rep.exit_code() == 2 and rep.counts["fetch.forbidden"] >= len(atts(ctx, pdf))
