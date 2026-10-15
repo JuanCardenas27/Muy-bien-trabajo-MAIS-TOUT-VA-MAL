@@ -43,7 +43,18 @@ def _seed(store: Store, paths: DataPaths) -> str:
             "INSERT INTO items (id, course_id, kind, classroom_id, title, text, state,"
             " creation_time, update_time, content_hash, raw_json, first_seen_at, last_seen_at)"
             " VALUES (?, ?, 'material', ?, ?, ?, 'PUBLISHED', ?, ?, ?, '{}', ?, ?)",
-            (item, _COURSE_ID, classroom_ref, title, text, seen, seen, f"{item}-content", seen, seen),
+            (
+                item,
+                _COURSE_ID,
+                classroom_ref,
+                title,
+                text,
+                seen,
+                seen,
+                f"{item}-content",
+                seen,
+                seen,
+            ),
         )
     conn.execute(
         "INSERT INTO blobs (sha256, size, mime_type, created_at) VALUES (?, 15, 'text/plain', ?)",
@@ -61,7 +72,7 @@ def _seed(store: Store, paths: DataPaths) -> str:
 
 def _add_extraction(store: Store, paths: DataPaths, sha: str, ver: str) -> None:
     """Inserta la fila `extractions` (sha, ver) y escribe su JSON de un bloque fr."""
-    block = TextBlock(text="Bonjour le monde.", lang="fr", source=f"at_{sha[:12]}")
+    block = TextBlock(text="Bonjour le monde.", lang="fr", source=f"sha256:{sha}")
     extraction = Extraction(
         blob_sha256=sha,
         extractor_version=ver,

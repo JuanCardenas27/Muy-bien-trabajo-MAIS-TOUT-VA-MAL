@@ -3,7 +3,6 @@
 from frances.cards.input import build_input, input_hash_for, items_needing_generation
 from frances.db.store import Store
 from frances.paths import DataPaths
-
 from tests.cards.conftest import SEED_SHA, _add_extraction, _gen, _mark_deleted
 
 
@@ -41,7 +40,7 @@ def test_removed_attachment_excluded(store: Store, paths: DataPaths) -> None:
     )
     _add_extraction(store, paths, other, "1")
     inp = build_input(store, paths, "mt_A")
-    assert all(b.source != f"at_{other[:12]}" for b in inp.blocks)
+    assert all(b.source != f"sha256:{other}" for b in inp.blocks)
     assert [b.source for b in inp.blocks[1:]] == sorted(b.source for b in inp.blocks[1:])
 
 
