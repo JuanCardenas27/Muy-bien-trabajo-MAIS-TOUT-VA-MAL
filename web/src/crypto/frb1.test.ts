@@ -1,6 +1,12 @@
 // @vitest-environment node
 import { readFileSync } from 'node:fs';
-import { FrbError, b64urlToBytes, checkKey, decryptBlob, deriveEncKey } from './frb1';
+import {
+  FrbError,
+  b64urlToBytes,
+  checkKey,
+  decryptBlob,
+  deriveEncKey,
+} from './frb1';
 import type { BundleManifest, KdfParams } from './frb1';
 
 interface FrbVector {
@@ -30,7 +36,7 @@ const kdf = (v: FrbVector): KdfParams => ({
 function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   const copy = new Uint8Array(bytes.length);
   copy.set(bytes);
-  return copy.buffer as ArrayBuffer;
+  return copy.buffer;
 }
 
 function manifestFor(v: FrbVector): BundleManifest {
