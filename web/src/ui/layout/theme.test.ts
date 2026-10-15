@@ -1,7 +1,12 @@
 import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { contrastRatio } from './contrast';
 
-const css = readFileSync(new URL('../theme.css', import.meta.url), 'utf8');
+const css = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '..', 'theme.css'),
+  'utf8',
+);
 
 const tokens = new Map<string, string>();
 for (const m of css.matchAll(/--([\w-]+)\s*:\s*(#[0-9a-fA-F]{6})/g)) {
@@ -31,8 +36,8 @@ test('theme tokens meet AA', () => {
     const bgHex = tokens.get(bg);
     expect(fgHex).toBeDefined();
     expect(bgHex).toBeDefined();
-    expect(contrastRatio(fgHex as string, bgHex as string)).toBeGreaterThanOrEqual(
-      4.5,
-    );
+    expect(
+      contrastRatio(fgHex as string, bgHex as string),
+    ).toBeGreaterThanOrEqual(4.5);
   }
 });

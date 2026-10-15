@@ -17,9 +17,7 @@ function renderAt(entry: string, status: LockStatus) {
 
 test('redirects to unlock when locked', async () => {
   const router = renderAt('/cards', 'locked');
-  await waitFor(() =>
-    expect(router.state.location.pathname).toBe('/unlock'),
-  );
+  await waitFor(() => expect(router.state.location.pathname).toBe('/unlock'));
   expect(router.state.location.search).toBe('?next=%2Fcards');
 });
 
@@ -27,9 +25,9 @@ test('nav marks current route', async () => {
   renderAt('/review', 'ready');
   const nav = await screen.findByRole('navigation', { name: 'Principal' });
   expect(
-    within(nav).getByRole('link', { name: 'Repaso' }).getAttribute(
-      'aria-current',
-    ),
+    within(nav)
+      .getByRole('link', { name: 'Repaso' })
+      .getAttribute('aria-current'),
   ).toBe('page');
   expect(
     within(nav).getByRole('link', { name: 'Hoy' }).getAttribute('aria-current'),
