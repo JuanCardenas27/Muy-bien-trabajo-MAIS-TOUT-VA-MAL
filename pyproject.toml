@@ -9,6 +9,7 @@ description = "Frances Classroom: app personal de estudio de frances"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
 dependencies = [
+"lingua-language-detector==2.1.1",
 "edge-tts==7.3.1",
 "fr-core-news-sm==3.8.0",
     "pydantic==2.14.1",
