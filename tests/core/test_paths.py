@@ -8,7 +8,8 @@ def test_data_paths_layout(tmp_path: Path) -> None:
     assert p.config == tmp_path / "frances.toml"
     assert p.voices_yaml == tmp_path / "voices.yaml"
     assert p.voice_refs == tmp_path / "voices" / "refs"
-    assert p.state_sql == tmp_path / "state/state.sql" and p.state_db == tmp_path / ".cache/state.db"
+    assert p.state_sql == tmp_path / "state/state.sql"
+    assert p.state_db == tmp_path / ".cache/state.db"
     assert p.cache == tmp_path / ".cache"
     assert p.blob_path("ab" + "0" * 62) == tmp_path / "blobs/ab" / ("ab" + "0" * 62)
     assert p.extraction_path("f" * 64, "3") == tmp_path / f"extractions/{'f' * 64}.3.json"

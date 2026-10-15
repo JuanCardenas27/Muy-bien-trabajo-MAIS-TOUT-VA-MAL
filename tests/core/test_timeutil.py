@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -29,6 +29,11 @@ def test_norm_ts_rejects_garbage() -> None:
         norm_ts("ayer a las tres")
 
 
+def test_norm_ts_rejects_impossible_date() -> None:
+    with pytest.raises(ValueError):
+        norm_ts("2026-13-01T00:00:00Z")
+
+
 def test_format_ts() -> None:
     dt = datetime(2026, 10, 14, 10, 20, 24, 898000, tzinfo=BOGOTA)
     assert format_ts(dt) == "2026-10-14T15:20:24.898000Z"
@@ -46,11 +51,11 @@ def test_to_bogota() -> None:
 def test_parse_ts_is_aware_utc() -> None:
     dt = parse_ts("2026-10-14T15:20:24Z")
     assert dt.tzinfo is not None
-    assert dt.utcoffset() == timezone.utc.utcoffset(None)
+    assert dt.utcoffset() == UTC.utcoffset(None)
     assert norm_ts("2026-10-14T15:20:24Z") == format_ts(dt)
 
 
 def test_now_utc_is_aware_utc() -> None:
     now = now_utc()
     assert now.tzinfo is not None
-    assert now.utcoffset() == timezone.utc.utcoffset(None)
+    assert now.utcoffset() == UTC.utcoffset(None)

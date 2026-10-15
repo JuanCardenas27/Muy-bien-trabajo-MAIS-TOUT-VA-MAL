@@ -69,6 +69,12 @@ def test_frances_error_maps_exit_code(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     def register(app: typer.Typer) -> None:
+        # Segundo comando solo para que typer use modo grupo (con uno solo
+        # invocaría el comando directamente sin aceptar su nombre).
+        @app.command()
+        def ping() -> None:
+            typer.echo("pong")
+
         @app.command()
         def boom(data: cli.DataOpt = Path(".")) -> None:
             def fn() -> None:

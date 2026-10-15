@@ -36,6 +36,11 @@ def test_settings_invalid_toml_is_config_error(tmp_path: Path) -> None:
         load_settings(bad, {})
 
 
+def test_settings_unreadable_path_is_config_error(tmp_path: Path) -> None:
+    with pytest.raises(ConfigError):
+        load_settings(tmp_path, {})
+
+
 def test_settings_partial_file_keeps_other_defaults(tmp_path: Path) -> None:
     partial = tmp_path / "partial.toml"
     partial.write_text("[classroom]\nmax_download_mb = 10\n", encoding="utf-8")
