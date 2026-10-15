@@ -132,10 +132,16 @@ def test_prune_card_audio_removes_only_links(store: Store) -> None:
 
 def test_select_work_orders_newest_card_first(store: Store) -> None:
     with store.tx() as conn:
-        old_key = _pending_row(conn, "Bonjour", "fr-FR-DeniseNeural", "c_old",
-                               created_at="2026-10-13T10:00:00.000000Z")
-        new_key = _pending_row(conn, "Au revoir", "fr-FR-DeniseNeural", "c_new",
-                               created_at="2026-10-15T10:00:00.000000Z")
+        old_key = _pending_row(
+            conn, "Bonjour", "fr-FR-DeniseNeural", "c_old", created_at="2026-10-13T10:00:00.000000Z"
+        )
+        new_key = _pending_row(
+            conn,
+            "Au revoir",
+            "fr-FR-DeniseNeural",
+            "c_new",
+            created_at="2026-10-15T10:00:00.000000Z",
+        )
         rows = select_work(conn, ["ms-neural"], ["pending"], 5, None)
     assert [r.cache_key for r in rows] == [new_key, old_key]
     assert rows[0].text == "Au revoir" and rows[0].attempts == 0
@@ -147,9 +153,7 @@ def test_select_work_filters_family_status_attempts(store: Store) -> None:
         _pending_row(conn, "Salut", "fr-FR-DeniseNeural", "c_f2")
         _pending_row(conn, "Merci", "fr-FR-DeniseNeural", "c_f3")
         conn.execute("UPDATE audio SET status = 'done' WHERE cache_key = ?", (keep,))
-        conn.execute(
-            "UPDATE audio SET attempts = 5 WHERE cache_key != ?", (keep,)
-        )
+        conn.execute("UPDATE audio SET attempts = 5 WHERE cache_key != ?", (keep,))
         # Sin enlace: nunca se devuelve aunque coincida familia/estado.
         lonely = audio_request("Sans lien", _voice())
         insert_pending(conn, lonely, NOW)

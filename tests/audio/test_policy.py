@@ -103,10 +103,7 @@ def test_rotation_is_deterministic() -> None:
     settings = _settings()
     first = voices_for("c_same", "vocab", "front", voices, settings)
     assert voices_for("c_same", "vocab", "front", voices, settings) == first
-    seen = {
-        voices_for(f"c_{i:03d}", "vocab", "front", voices, settings)[-1].id
-        for i in range(200)
-    }
+    seen = {voices_for(f"c_{i:03d}", "vocab", "front", voices, settings)[-1].id for i in range(200)}
     assert len(seen) >= 5
 
 
@@ -119,8 +116,9 @@ def test_drill_front_uses_all_enabled(tmp_path: Path) -> None:
     got = voices_for("c_drill", "drill", "front", voices, settings)
     assert len(got) == 17
     assert [v.id for v in got] == sorted(v.id for v in voices)
-    disabled = [v.model_copy(update={"enabled": False}) if v.id == "fr-CA-JeanNeural" else v
-                for v in voices]
+    disabled = [
+        v.model_copy(update={"enabled": False}) if v.id == "fr-CA-JeanNeural" else v for v in voices
+    ]
     got2 = voices_for("c_drill", "drill", "front", disabled, settings)
     assert len(got2) == 16
     assert "fr-CA-JeanNeural" not in {v.id for v in got2}
@@ -156,8 +154,7 @@ def test_disabled_rotating_voice_never_chosen() -> None:
     for i in range(50):
         got = voices_for(f"c_{i}", "vocab", "front", voices, settings)
         assert "fr-FR-VivienneMultilingualNeural" not in {v.id for v in got}
-    assert all(len(voices_for(f"c_{i}", "vocab", "front", voices, settings)) == 2
-               for i in range(5))
+    assert all(len(voices_for(f"c_{i}", "vocab", "front", voices, settings)) == 2 for i in range(5))
 
 
 def test_plan_audio_creates_pending_and_links(store: Store) -> None:
@@ -202,6 +199,9 @@ def test_plan_audio_skips_stale_cards(store: Store) -> None:
     created = plan_audio(store, _three_voices(), _settings(), NOW)
     assert created == 4
     assert _audio_counts(store) == (4, 4)
-    assert store.conn.execute(
-        "SELECT count(*) FROM card_audio WHERE card_id = 'c_stale'"
-    ).fetchone()[0] == 0
+    assert (
+        store.conn.execute("SELECT count(*) FROM card_audio WHERE card_id = 'c_stale'").fetchone()[
+            0
+        ]
+        == 0
+    )

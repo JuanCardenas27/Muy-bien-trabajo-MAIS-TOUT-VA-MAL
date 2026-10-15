@@ -48,9 +48,7 @@ def link_card_audio(conn: sqlite3.Connection, card_id: str, field: str, cache_ke
     )
 
 
-def prune_card_audio(
-    conn: sqlite3.Connection, card_id: str, field: str, keep: set[str]
-) -> int:
+def prune_card_audio(conn: sqlite3.Connection, card_id: str, field: str, keep: set[str]) -> int:
     """Borra los enlaces fuera de `keep`; nunca borra filas `audio`."""
     if not keep:
         cur = conn.execute(
@@ -134,15 +132,12 @@ def mark_attempt_failed(
     now: str,
 ) -> str:
     """Suma un intento; devuelve `terminal` si llegó al tope, si no `pending`."""
-    row = conn.execute(
-        "SELECT attempts FROM audio WHERE cache_key = ?", (cache_key,)
-    ).fetchone()
+    row = conn.execute("SELECT attempts FROM audio WHERE cache_key = ?", (cache_key,)).fetchone()
     current = int(row[0]) if row is not None else 0
     new_attempts = current + 1
     new_status = terminal if new_attempts >= max_attempts else "pending"
     conn.execute(
-        "UPDATE audio SET attempts = ?, status = ?, error = ?, updated_at = ?"
-        " WHERE cache_key = ?",
+        "UPDATE audio SET attempts = ?, status = ?, error = ?, updated_at = ? WHERE cache_key = ?",
         (new_attempts, new_status, error, now, cache_key),
     )
     return new_status

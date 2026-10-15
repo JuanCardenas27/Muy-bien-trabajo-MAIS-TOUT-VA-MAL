@@ -10,8 +10,6 @@ from frances.db.store import Store
 from frances.models.audio import Voice
 from frances.models.content import CardKind
 
-Field = Literal["front", "example"]
-
 
 def _fixed_enabled(voices: list[Voice], settings: Settings) -> list[Voice]:
     """Fijas habilitadas en el orden de `fixed_voices`; inexistentes se ignoran."""
@@ -33,7 +31,7 @@ def _rotating_pool(voices: list[Voice], settings: Settings) -> list[Voice]:
 def voices_for(
     card_id: str,
     kind: CardKind,
-    field: Field,
+    field: Literal["front", "example"],
     voices: list[Voice],
     settings: Settings,
 ) -> list[Voice]:

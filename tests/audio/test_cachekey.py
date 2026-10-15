@@ -1,4 +1,4 @@
-"""Tests de la clave de caché de audio (AUD-02)."""
+"""Tests de la clave de cache de audio (AUD-02)."""
 
 import unicodedata
 from typing import Any
@@ -10,6 +10,8 @@ from frances.audio.cachekey import (
     family_of,
 )
 from frances.models.audio import Voice
+
+CURLY = chr(0x2019)
 
 
 def _voice(
@@ -45,9 +47,9 @@ def _henri() -> Voice:
 def test_cache_key_typography_invariant() -> None:
     denise, henri = _denise(), _henri()
     k = audio_cache_key("l'école", denise)
-    assert audio_cache_key("l’école", denise) == k
+    assert audio_cache_key("l" + CURLY + "école", denise) == k
     assert audio_cache_key(unicodedata.normalize("NFD", "l'école"), denise) == k
-    assert audio_cache_key("l’école", henri) != k
+    assert audio_cache_key("l" + CURLY + "école", henri) != k
     assert len(k) == 32 and all(c in "0123456789abcdef" for c in k)
 
 
@@ -80,20 +82,19 @@ def test_synthetic_tuning_changes_key() -> None:
         pitch_hz=20,
         shift_ratio=1.08,
     )
-    assert audio_cache_key("Bonjour", base.model_copy(update={"pitch_hz": 21})) != audio_cache_key(
-        "Bonjour", base
-    )
-    assert audio_cache_key(
-        "Bonjour", base.model_copy(update={"shift_ratio": 1.09})
-    ) != audio_cache_key("Bonjour", base)
+    other_pitch = base.model_copy(update={"pitch_hz": 21})
+    other_shift = base.model_copy(update={"shift_ratio": 1.09})
+    assert audio_cache_key("Bonjour", other_pitch) != audio_cache_key("Bonjour", base)
+    assert audio_cache_key("Bonjour", other_shift) != audio_cache_key("Bonjour", base)
 
 
 def test_audio_request_fields() -> None:
     denise = _denise()
-    req = audio_request("l’école", denise)
-    assert req.text == "l’école"
+    curly_text = "l" + CURLY + "école"
+    req = audio_request(curly_text, denise)
+    assert req.text == curly_text
     assert req.text_norm == "l'école"
     assert req.voice_id == "fr-FR-DeniseNeural"
     assert req.family == "ms-neural"
     assert req.family_version == "1"
-    assert req.cache_key == audio_cache_key("l’école", denise)
+    assert req.cache_key == audio_cache_key(curly_text, denise)
