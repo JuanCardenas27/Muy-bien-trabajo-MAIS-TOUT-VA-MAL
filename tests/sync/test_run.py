@@ -15,16 +15,16 @@ from typer.testing import CliRunner
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "fixtures"))
 
-from google_mock import FRENCH_COURSE_ID, install_google_mocks  # noqa: E402
+from google_mock import FRENCH_COURSE_ID, install_google_mocks
 
-from frances.db.store import Store  # noqa: E402  (antes que stage: evita el ciclo stage→db→usage→stage de FND-03)
-from frances.errors import AuthError  # noqa: E402
-from frances.models.ids import item_id  # noqa: E402
-from frances.stage import make_context  # noqa: E402
-from frances.sync.attachments import extract_attachments  # noqa: E402
-from frances.sync.classroom import CLASSROOM_BASE_URL  # noqa: E402
-from frances.sync.run import register, run_reconcile, run_sync  # noqa: E402
-from frances.timeutil import format_ts  # noqa: E402
+from frances.db.store import Store
+from frances.errors import AuthError
+from frances.models.ids import item_id
+from frances.stage import make_context
+from frances.sync.attachments import extract_attachments
+from frances.sync.classroom import CLASSROOM_BASE_URL
+from frances.sync.run import register, run_reconcile, run_sync
+from frances.timeutil import format_ts
 
 pytestmark = pytest.mark.respx(assert_all_called=False)
 
@@ -93,17 +93,17 @@ def expected_attachments(scenario: str) -> int:
     )
 
 
-def runs_rows(ctx: Any) -> list[tuple[str, str]]:
+def runs_rows(store: Store) -> list[tuple[str, str]]:
     return [
         (str(stage), str(status))
-        for stage, status in ctx.store.conn.execute(
+        for stage, status in store.conn.execute(
             "SELECT stage, status FROM runs ORDER BY id"
         ).fetchall()
     ]
 
 
-def course_row(ctx: Any, course_id: str) -> dict[str, Any]:
-    cur = ctx.store.conn.execute("SELECT * FROM courses WHERE id = ?", (course_id,))
+def course_row(store: Store, course_id: str) -> dict[str, Any]:
+    cur = store.conn.execute("SELECT * FROM courses WHERE id = ?", (course_id,))
     cols = [d[0] for d in cur.description]
     row = cur.fetchone()
     assert row is not None
@@ -137,8 +137,8 @@ def test_sync_end_to_end_v1_then_rerun(tmp_path: Path) -> None:
     assert rep1.status == "ok" and rep1.exit_code() == 0
     assert rep1.counts["sync.courses"] == 1  # FND-05: un solo curso ACTIVE que pasa el regex
     assert {k: rep1.counts[f"sync.seen.{k}"] for k in seen} == seen
-    assert rep1.counts["sync.items_seen"] == rep1.counts["sync.items_upserted"] == sum(
-        seen.values()
+    assert (
+        rep1.counts["sync.items_seen"] == rep1.counts["sync.items_upserted"] == sum(seen.values())
     )
     assert rep1.counts["sync.attachments_new"] == expected_attachments("v1")
     with respx.mock(assert_all_called=False) as r:
@@ -146,7 +146,8 @@ def test_sync_end_to_end_v1_then_rerun(tmp_path: Path) -> None:
         rep2 = run_sync(ctx)
     assert (rep2.counts["sync.items_upserted"], rep2.counts["sync.attachments_new"]) == (0, 0)
     assert runs_rows(ctx.store) == [("sync", "ok"), ("sync", "ok")]
-    assert course_row(ctx.store, FR)["included"] == 1 and course_row(ctx.store, CALC)["included"] == 0
+    assert course_row(ctx.store, FR)["included"] == 1
+    assert course_row(ctx.store, CALC)["included"] == 0
 
 
 def test_reconcile_anomaly_is_partial(tmp_path: Path) -> None:
