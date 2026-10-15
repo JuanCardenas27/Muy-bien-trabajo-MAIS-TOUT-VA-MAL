@@ -17,9 +17,7 @@ class FakeTranslator:
     def __init__(self) -> None:
         self.calls: list[list[str]] = []
 
-    def translate(
-        self, texts: list[str], src: str = "fr", dst: str = "es"
-    ) -> list[str | None]:
+    def translate(self, texts: list[str], src: str = "fr", dst: str = "es") -> list[str | None]:
         self.calls.append(list(texts))
         return ["ES:" + t for t in texts]
 
@@ -27,9 +25,7 @@ class FakeTranslator:
 class NoneTranslator:
     """Simula cuota agotada: todo queda pendiente."""
 
-    def translate(
-        self, texts: list[str], src: str = "fr", dst: str = "es"
-    ) -> list[str | None]:
+    def translate(self, texts: list[str], src: str = "fr", dst: str = "es") -> list[str | None]:
         return [None] * len(texts)
 
 
@@ -61,14 +57,7 @@ def test_no_proper_nouns() -> None:
 
 def test_respects_vocab_max() -> None:
     assert (
-        len(
-            _vocab(
-                RulesGenerator(FakeTranslator(), vocab_max=3).generate(
-                    _inp(LESSON, "fr")
-                )
-            )
-        )
-        == 3
+        len(_vocab(RulesGenerator(FakeTranslator(), vocab_max=3).generate(_inp(LESSON, "fr")))) == 3
     )
 
 
@@ -94,9 +83,7 @@ def test_none_translation_marks_pending() -> None:
 
 
 def test_spanish_blocks_ignored() -> None:
-    out = RulesGenerator(FakeTranslator()).generate(
-        _inp("Hola a todos, mañana hay clase.", "es")
-    )
+    out = RulesGenerator(FakeTranslator()).generate(_inp("Hola a todos, mañana hay clase.", "es"))
     assert out.cards == [] and out.sheet.vocab_fronts == []
 
 
