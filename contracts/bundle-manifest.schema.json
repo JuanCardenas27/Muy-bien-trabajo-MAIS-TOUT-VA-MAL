@@ -1,0 +1,95 @@
+{
+  "$defs": {
+    "FileRef": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "mime": {
+          "title": "Mime",
+          "type": "string"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size": {
+          "title": "Size",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "size",
+        "mime",
+        "sha256"
+      ],
+      "title": "FileRef",
+      "type": "object"
+    },
+    "KdfParams": {
+      "additionalProperties": false,
+      "properties": {
+        "hash": {
+          "const": "SHA-256",
+          "title": "Hash",
+          "type": "string"
+        },
+        "iterations": {
+          "title": "Iterations",
+          "type": "integer"
+        },
+        "name": {
+          "const": "PBKDF2",
+          "title": "Name",
+          "type": "string"
+        },
+        "salt": {
+          "title": "Salt",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "hash",
+        "iterations",
+        "salt"
+      ],
+      "title": "KdfParams",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "check": {
+      "title": "Check",
+      "type": "string"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "format": {
+      "const": "FRB1",
+      "title": "Format",
+      "type": "string"
+    },
+    "index": {
+      "$ref": "#/$defs/FileRef"
+    },
+    "kdf": {
+      "$ref": "#/$defs/KdfParams"
+    }
+  },
+  "required": [
+    "format",
+    "kdf",
+    "check",
+    "index",
+    "created_at"
+  ],
+  "title": "BundleManifest",
+  "type": "object"
+}

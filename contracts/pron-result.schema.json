@@ -1,0 +1,149 @@
+{
+  "$defs": {
+    "PhonemeScore": {
+      "additionalProperties": false,
+      "properties": {
+        "accuracy": {
+          "title": "Accuracy",
+          "type": "number"
+        },
+        "phoneme": {
+          "title": "Phoneme",
+          "type": "string"
+        }
+      },
+      "required": [
+        "phoneme",
+        "accuracy"
+      ],
+      "title": "PhonemeScore",
+      "type": "object"
+    },
+    "PronScores": {
+      "additionalProperties": false,
+      "properties": {
+        "accuracy": {
+          "title": "Accuracy",
+          "type": "number"
+        },
+        "completeness": {
+          "title": "Completeness",
+          "type": "number"
+        },
+        "fluency": {
+          "title": "Fluency",
+          "type": "number"
+        },
+        "pron": {
+          "title": "Pron",
+          "type": "number"
+        }
+      },
+      "required": [
+        "pron",
+        "accuracy",
+        "fluency",
+        "completeness"
+      ],
+      "title": "PronScores",
+      "type": "object"
+    },
+    "WordScore": {
+      "additionalProperties": false,
+      "properties": {
+        "accuracy": {
+          "title": "Accuracy",
+          "type": "number"
+        },
+        "error_type": {
+          "enum": [
+            "None",
+            "Omission",
+            "Insertion",
+            "Mispronunciation",
+            "UnexpectedBreak",
+            "MissingBreak",
+            "Monotone"
+          ],
+          "title": "Error Type",
+          "type": "string"
+        },
+        "phonemes": {
+          "items": {
+            "$ref": "#/$defs/PhonemeScore"
+          },
+          "title": "Phonemes",
+          "type": "array"
+        },
+        "word": {
+          "title": "Word",
+          "type": "string"
+        }
+      },
+      "required": [
+        "word",
+        "accuracy",
+        "error_type",
+        "phonemes"
+      ],
+      "title": "WordScore",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "at": {
+      "title": "At",
+      "type": "string"
+    },
+    "card_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Card Id"
+    },
+    "duration_ms": {
+      "title": "Duration Ms",
+      "type": "integer"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "recognized_text": {
+      "title": "Recognized Text",
+      "type": "string"
+    },
+    "reference_text": {
+      "title": "Reference Text",
+      "type": "string"
+    },
+    "scores": {
+      "$ref": "#/$defs/PronScores"
+    },
+    "words": {
+      "items": {
+        "$ref": "#/$defs/WordScore"
+      },
+      "title": "Words",
+      "type": "array"
+    }
+  },
+  "required": [
+    "id",
+    "card_id",
+    "reference_text",
+    "recognized_text",
+    "at",
+    "duration_ms",
+    "scores",
+    "words"
+  ],
+  "title": "PronResult",
+  "type": "object"
+}
