@@ -169,9 +169,7 @@ def _seed(conn: sqlite3.Connection, root: Path) -> None:
             NOW,
         ),
     )
-    conn.execute(
-        "INSERT INTO blobs VALUES (?,?,?,?)", (SHA_PDF, 14, "application/pdf", NOW)
-    )
+    conn.execute("INSERT INTO blobs VALUES (?,?,?,?)", (SHA_PDF, 14, "application/pdf", NOW))
     conn.execute(
         "INSERT INTO blobs VALUES (?,?,?,?)",
         (SHA_PDF_EXPORT, 15, "application/pdf", NOW),
@@ -210,7 +208,7 @@ def _seed(conn: sqlite3.Connection, root: Path) -> None:
             "ext-forb",
             "Prohibido",
             "https://example.com/forb",
-            "application/pdf",
+            "application/vnd.google-apps.spreadsheet",
             "1",
             None,
             SHA_FORBIDDEN_EXPORT,
@@ -306,23 +304,63 @@ def _seed(conn: sqlite3.Connection, root: Path) -> None:
     )
     conn.execute("INSERT INTO card_sources VALUES (?,?)", ("c_audio", "mt_new"))
     conn.execute("INSERT INTO card_sources VALUES (?,?)", ("c_stale", "mt_new"))
+    conn.execute("INSERT INTO sheets VALUES (?,?,?,?,?)", ("mt_new", SHEET_JSON, "llm", "1", NOW))
     conn.execute(
-        "INSERT INTO sheets VALUES (?,?,?,?,?)", ("mt_new", SHEET_JSON, "llm", "1", NOW)
+        "INSERT INTO audio VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        (
+            "k-denise",
+            "Bonjour",
+            "bonjour",
+            "fr-FR-DeniseNeural",
+            "ms-neural",
+            "1",
+            "done",
+            "edge",
+            None,
+            None,
+            None,
+            1,
+            None,
+            NOW,
+        ),
     )
     conn.execute(
         "INSERT INTO audio VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        ("k-denise", "Bonjour", "bonjour", "fr-FR-DeniseNeural", "ms-neural", "1",
-         "done", "edge", None, None, None, 1, None, NOW),
+        (
+            "k-henri",
+            "Bonjour",
+            "bonjour",
+            "fr-FR-HenriNeural",
+            "ms-neural",
+            "1",
+            "done",
+            "edge",
+            None,
+            None,
+            None,
+            1,
+            None,
+            NOW,
+        ),
     )
     conn.execute(
         "INSERT INTO audio VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        ("k-henri", "Bonjour", "bonjour", "fr-FR-HenriNeural", "ms-neural", "1",
-         "done", "edge", None, None, None, 1, None, NOW),
-    )
-    conn.execute(
-        "INSERT INTO audio VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        ("k-eloise", "Bonjour", "bonjour", "fr-FR-EloiseNeural", "ms-neural", "1",
-         "pending", None, None, None, None, 1, None, NOW),
+        (
+            "k-eloise",
+            "Bonjour",
+            "bonjour",
+            "fr-FR-EloiseNeural",
+            "ms-neural",
+            "1",
+            "pending",
+            None,
+            None,
+            None,
+            None,
+            1,
+            None,
+            NOW,
+        ),
     )
     conn.execute("INSERT INTO card_audio VALUES (?,?,?)", ("c_audio", "front", "k-denise"))
     conn.execute("INSERT INTO card_audio VALUES (?,?,?)", ("c_audio", "front", "k-henri"))
@@ -371,9 +409,7 @@ def test_card_audio_done_and_pending(index: ContentIndex) -> None:
         ("front", "fr-FR-DeniseNeural"),
         ("front", "fr-FR-HenriNeural"),
     ]
-    assert [(p.field, p.voice_id) for p in card.audio_pending] == [
-        ("front", "fr-FR-EloiseNeural")
-    ]
+    assert [(p.field, p.voice_id) for p in card.audio_pending] == [("front", "fr-FR-EloiseNeural")]
     assert card.audio[0].file.mime == "audio/mpeg"
 
 
