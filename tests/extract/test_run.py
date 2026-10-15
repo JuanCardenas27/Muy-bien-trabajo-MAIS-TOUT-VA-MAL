@@ -88,11 +88,11 @@ def ctx_with_blobs(tmp_path: Path, mime_by_key: dict[str, str]) -> StageContext:
         native = mime.startswith(NATIVE_PREFIX)
         rows: list[tuple[str, int, str]] = []
         if native:
-            export_sha, size = blobs.put_bytes(f"texte exporté {key}".encode("utf-8"))
+            export_sha, size = blobs.put_bytes(f"texte exporté {key}".encode())
             rows.append((export_sha, size, "text/plain"))
             blob_sha, export_text = None, export_sha
         else:
-            blob_sha, size = blobs.put_bytes(f"contenido {key}".encode("utf-8"))
+            blob_sha, size = blobs.put_bytes(f"contenido {key}".encode())
             rows.append((blob_sha, size, mime))
             export_text = None
         with ctx.store.tx() as conn:

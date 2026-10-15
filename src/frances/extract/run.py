@@ -60,7 +60,9 @@ def _row_lang(blocks: list[TextBlock]) -> Lang:
     return max(totals, key=lambda lang: totals[lang])
 
 
-def _process(ctx: StageContext, blobs: BlobStore, cand: ExtractCandidate, report: StageReport) -> None:
+def _process(
+    ctx: StageContext, blobs: BlobStore, cand: ExtractCandidate, report: StageReport
+) -> None:
     dispatch = _dispatch(cand, blobs.path(cand.sha256))
     if dispatch is None:
         report.counts["extract.skipped_unsupported"] += 1
