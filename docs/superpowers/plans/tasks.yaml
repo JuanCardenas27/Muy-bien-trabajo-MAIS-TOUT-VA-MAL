@@ -15,11 +15,10 @@ plans:
 tasks:
   # ---------- Spikes (salida: ADR + fixtures) ----------
   - {id: SPK-01, plan: P01, human: false, deps: [], title: "Edge-TTS: confirmar las 13 voces, formato y límites", owns: [docs/decisions/ADR-001-edge-tts.md, scripts/spikes/spk01_edge_voices.py]}
-  - {id: SPK-02, plan: P01, human: true,  deps: [], title: "Voces infantiles: escuchar Eloise y decidir la fuente de referencias", owns: [docs/decisions/ADR-002-child-voices.md, docs/decisions/consent-template.md]}
-  - {id: SPK-03, plan: P01, human: false, deps: [], title: "Benchmark de clonación en CPU: Chatterbox vs XTTS v2", owns: [docs/decisions/ADR-003-clone-engine.md, scripts/spikes/spk03_clone_bench.py]}
-  - {id: SPK-04, plan: P01, human: true,  deps: [], title: "Capturar fixtures reales de Azure Pronunciation fr-FR", owns: [docs/decisions/ADR-004-azure-phonemes.md, tests/fixtures/azure/, scripts/spikes/spk04_make_audio.py]}
+  - {id: SPK-02, plan: P01, human: true,  deps: [], title: "Voces jóvenes sintéticas: escuchar y fijar parámetros", owns: [docs/decisions/ADR-002-child-voices.md, scripts/spikes/spk02_synth_voices.py, .github/workflows/spike-voices.yml]}
+  - {id: SPK-04, plan: P01, human: true,  deps: [], title: "Capturar fixtures reales de Azure Pronunciation fr-FR", owns: [docs/decisions/ADR-004-azure-phonemes.md, tests/fixtures/azure/, scripts/spikes/spk04_azure.py, .github/workflows/spike-azure.yml]}
   - {id: SPK-05, plan: P01, human: true,  deps: [], title: "OAuth de Google en producción + acceso Workspace UNAL", owns: [docs/decisions/ADR-005-google-oauth.md]}
-  - {id: SPK-06, plan: P01, human: true,  deps: [], title: "LLM en Azure AI Foundry con Azure for Students", owns: [docs/decisions/ADR-006-llm.md, scripts/spikes/spk06_llm_probe.py]}
+  - {id: SPK-06, plan: P01, human: true,  deps: [], title: "Elegir proveedor LLM con API compatible con OpenAI", owns: [docs/decisions/ADR-006-llm.md, scripts/spikes/spk06_llm_probe.py]}
   # ---------- Fundación ----------
   - {id: FND-01, plan: P01, human: false, deps: [], title: "Scaffold del monorepo (uv, ruff, mypy, pytest, Vite/React/TS, CI básico)", owns: [pyproject.toml, uv.lock, .npmrc, .gitignore, web/package.json, web/package-lock.json, web/tsconfig.json, web/index.html, web/eslint.config.js, web/.npmrc, web/src/vite-env.d.ts, web/public/, .github/workflows/ci.yml, src/frances/__init__.py, tests/conftest.py], placeholders: [web/src/main.tsx, web/vite.config.ts]}
   - {id: FND-02, plan: P01, human: false, deps: [FND-01], title: "Contratos: modelos, IDs, textnorm, export de JSON Schema y tipos TS", owns: [src/frances/models/, src/frances/textnorm.py, contracts/, web/src/contracts/, web/scripts/gen-types.mjs]}
@@ -28,7 +27,7 @@ tasks:
   - {id: FND-05, plan: P01, human: false, deps: [FND-01], title: "Generador de fixtures sintéticos (Classroom, Drive, PDF, imágenes) + mocks respx", owns: [tests/fixtures/make_fixtures.py, tests/fixtures/google_mock.py, tests/fixtures/classroom/, tests/fixtures/drive/, tests/fixtures/pdf/, tests/fixtures/images/]}
   - {id: AGT-01, plan: P01, human: false, deps: [FND-01], title: "Validador de tasks.yaml y sincronización con GitHub Issues", owns: [scripts/tasks_check.py, scripts/sync_issues.py]}
   # ---------- Sync ----------
-  - {id: SYN-01, plan: P02, human: false, deps: [FND-04, SYN-02], title: "OAuth: frances auth init/check", owns: [src/frances/sync/auth.py]}
+  - {id: SYN-01, plan: P02, human: false, deps: [FND-04, SYN-02], title: "OAuth: credenciales desde el entorno + frances auth check", owns: [src/frances/sync/auth.py, .github/workflows/auth-check.yml]}
   - {id: SYN-02, plan: P02, human: false, deps: [FND-04], title: "Cliente HTTP de Google: refresh, reintentos, paginación, errores", owns: [src/frances/sync/google_http.py]}
   - {id: SYN-03, plan: P02, human: false, deps: [SYN-02, FND-02, FND-05], title: "ClassroomClient: cursos, temas y streams por updateTime desc", owns: [src/frances/sync/classroom.py]}
   - {id: SYN-04, plan: P02, human: false, deps: [SYN-03, SYN-05, FND-03], title: "Sync incremental por stream con watermark", owns: [src/frances/sync/streams.py, src/frances/sync/repo.py]}
@@ -53,16 +52,12 @@ tasks:
   - {id: CRD-06, plan: P03, human: false, deps: [FND-03, SPK-04], title: "Fonemización espeak-ng + mapa a etiquetas Azure", owns: [src/frances/cards/phonemes.py, src/frances/cards/phoneme_map.py]}
   - {id: CRD-07, plan: P03, human: false, deps: [CRD-06], title: "Mazos de taladro curados y automáticos por fonema", owns: [src/frances/cards/drills.py, src/frances/cards/drills_seed.yaml]}
   # ---------- Audio ----------
-  - {id: AUD-01, plan: P04, human: false, deps: [FND-02, FND-04, SPK-01], title: "Registro de voces + validación de consentimiento", owns: [src/frances/audio/voices.py, src/frances/audio/voices_default.yaml]}
+  - {id: AUD-01, plan: P04, human: false, deps: [FND-02, FND-04, SPK-01], title: "Registro de voces (13 de Edge + voces jóvenes sintéticas)", owns: [src/frances/audio/voices.py, src/frances/audio/voices_default.yaml]}
   - {id: AUD-02, plan: P04, human: false, deps: [AUD-01, FND-03], title: "Cache key + política de voces + plan_audio", owns: [src/frances/audio/cachekey.py, src/frances/audio/policy.py, src/frances/audio/repo.py]}
   - {id: AUD-03, plan: P04, human: false, deps: [FND-02, SPK-01], title: "Motor Edge-TTS", owns: [src/frances/audio/edge.py]}
   - {id: AUD-04, plan: P04, human: false, deps: [FND-03, AUD-03], title: "Motor Azure TTS F0 (respaldo) con tope mensual", owns: [src/frances/audio/azure_tts.py]}
   - {id: AUD-05, plan: P04, human: false, deps: [FND-04], title: "Post-proceso ffmpeg: MP3 24k/48k mono, −16 LUFS, duración", owns: [src/frances/audio/post.py]}
   - {id: AUD-06, plan: P04, human: false, deps: [AUD-02, AUD-03, AUD-04, AUD-05], title: "Etapa audio: cola, concurrencia, fallback Edge→Azure", owns: [src/frances/audio/run.py]}
-  - {id: AUD-07, plan: P04, human: false, deps: [FND-03, SPK-03], title: "Proyecto clone/: protocolo de motor + adaptadores Chatterbox/XTTS", owns: [clone/pyproject.toml, clone/uv.lock, clone/src/frances_clone/__init__.py, clone/src/frances_clone/engines/]}
-  - {id: AUD-08, plan: P04, human: false, deps: [AUD-07], title: "QA de clips con faster-whisper (CER)", owns: [clone/src/frances_clone/qa.py]}
-  - {id: AUD-09, plan: P04, human: false, deps: [AUD-07, AUD-08, AUD-05, AUD-02], title: "frances-clone run: lote con tope, reanudable, QA", owns: [clone/src/frances_clone/run.py, clone/src/frances_clone/cli.py]}
-  - {id: AUD-10, plan: P04, human: false, deps: [AUD-07, SPK-02, AUD-03], title: "Referencias sintéticas adolescente/infantil (frances-clone make-ref)", owns: [clone/src/frances_clone/refvoice.py]}
   # ---------- Bundle ----------
   - {id: BND-01, plan: P05, human: false, deps: [FND-01], title: "FRB1 en Python + vectores de prueba", owns: [src/frances/bundle/frb1.py, tests/fixtures/frb1_vectors.json]}
   - {id: BND-02, plan: P05, human: false, deps: [FND-02, FND-03, BND-03, EXT-03], title: "Constructor del ContentIndex desde el Store", owns: [src/frances/bundle/index.py]}
@@ -91,16 +86,15 @@ tasks:
   - {id: PRN-06, plan: P06, human: false, deps: [PRN-04], title: "Medidor de cuota F0 (5 h/mes, aviso a 4 h)", owns: [web/src/pron/quota.ts]}
   - {id: PRN-07, plan: P06, human: false, deps: [PRN-04, PRN-06], title: "Pantalla Progreso (mapa de fonemas, historial)", owns: [web/src/routes/Progress.tsx]}
   # ---------- Operación ----------
-  - {id: OPS-01, plan: P07, human: false, deps: [AGT-01, BND-04, WEB-13], title: "CI completo del repo público (contratos, grafo, e2e)", owns: [.github/workflows/contracts.yml, .github/workflows/e2e.yml, .github/workflows/clone-tests.yml]}
+  - {id: OPS-01, plan: P07, human: false, deps: [AGT-01, BND-04, WEB-13], title: "CI completo del repo público (contratos, grafo, e2e)", owns: [.github/workflows/contracts.yml, .github/workflows/e2e.yml]}
   - {id: OPS-02, plan: P07, human: false, deps: [SYN-07, FET-03, EXT-04, CRD-05, CRD-06, CRD-07, AUD-06, BND-04], title: "frances run-daily (orquestación + detección de cambios)", owns: [src/frances/ops/daily.py]}
-  - {id: OPS-03, plan: P07, human: false, deps: [OPS-02], title: "Persistencia: dump + commit/push con reintento", owns: [scripts/persist.sh]}
+  - {id: OPS-03, plan: P07, human: false, deps: [FND-03, FND-04], title: "Almacén R2: pull, push con lease e If-Match, publicación del bundle", owns: [src/frances/ops/r2.py]}
   - {id: OPS-04, plan: P07, human: false, deps: [FND-04], title: "frances report-failure (issues idempotentes)", owns: [src/frances/ops/report.py]}
-  - {id: OPS-05, plan: P07, human: false, deps: [OPS-02, OPS-03, OPS-04, OPS-08, AUD-09], title: "Plantilla del repo frances-data (workflows, config, README)", owns: [data-repo-template/]}
-  - {id: OPS-06, plan: P07, human: false, deps: [OPS-01], title: "Demo público en Pages con datos sintéticos", owns: [.github/workflows/demo-pages.yml]}
-  - {id: OPS-07, plan: P07, human: false, deps: [FND-03, AUD-01], title: "frances doctor (tamaños, cuotas, token, consentimiento)", owns: [src/frances/ops/doctor.py]}
-  - {id: OPS-08, plan: P07, human: false, deps: [AUD-09], title: "Runner self-hosted para clonación (guía + script)", owns: [docs/runbooks/self-hosted-runner.md, scripts/runner/]}
+  - {id: OPS-05, plan: P07, human: false, deps: [OPS-02, OPS-03, OPS-04, OPS-07, AUD-01], title: "Workflows de producción (daily, reconcile) y configuración de despliegue", owns: [.github/workflows/daily.yml, .github/workflows/reconcile.yml, deploy/]}
+  - {id: OPS-06, plan: P07, human: false, deps: [OPS-01], title: "Pages: app real y demo sintético", owns: [.github/workflows/pages.yml]}
+  - {id: OPS-07, plan: P07, human: false, deps: [FND-03, AUD-01], title: "frances doctor (tamaños, cuotas, token, voces)", owns: [src/frances/ops/doctor.py]}
+  - {id: OPS-09, plan: P07, human: false, deps: [FND-01], title: "Worker de Cloudflare que sirve el bundle cifrado", owns: [worker/, .github/workflows/worker.yml, .github/workflows/worker-deploy.yml]}
   # ---------- Puesta en marcha (humano + agente) ----------
   - {id: LIVE-01, plan: P07, human: true, deps: [SPK-05, SYN-01], title: "Proyecto GCP, cliente OAuth en producción, refresh token", owns: []}
-  - {id: LIVE-02, plan: P07, human: true, deps: [OPS-05, LIVE-01], title: "Crear frances-data, Pages, secretos, FRANCES_CODE_SHA", owns: []}
+  - {id: LIVE-02, plan: P07, human: true, deps: [OPS-05, OPS-09, LIVE-01], title: "Bucket R2, Worker, secretos del environment y variables", owns: []}
   - {id: LIVE-03, plan: P07, human: false, deps: [LIVE-02], title: "Backfill inicial + checklist de aceptación", owns: []}
-  - {id: LIVE-04, plan: P07, human: true, deps: [LIVE-03, AUD-10], title: "Registrar runner + primer lote de clonación + escucha", owns: []}

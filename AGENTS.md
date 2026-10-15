@@ -46,4 +46,4 @@ uv run python scripts/tasks_check.py --waves                                 # v
 
 ## Tareas humanas
 
-Las tareas con `human: true` (SPK-02, SPK-04, SPK-05, SPK-06, LIVE-01, LIVE-02, LIVE-04) las ejecuta el dueño del proyecto. Un agente puede preparar el material (guías, scripts, plantillas), pero no inventa sus resultados. Cada una deja un ADR o un checklist firmado en `docs/decisions/`.
+Las tareas con `human: true` (SPK-02, SPK-04, SPK-05, SPK-06, LIVE-01, LIVE-02) las ejecuta el dueño del proyecto. Un agente puede preparar el material (guías, scripts, plantillas), pero no inventa sus resultados. Cada una deja un ADR o un checklist firmado en `docs/decisions/`.
