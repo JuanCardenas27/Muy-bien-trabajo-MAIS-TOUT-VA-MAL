@@ -27,9 +27,7 @@ _logger = get_logger(__name__)
 class Translator(Protocol):
     """Contrato mínimo que consume el generador por reglas (CRD-02)."""
 
-    def translate(
-        self, texts: list[str], src: str = "fr", dst: str = "es"
-    ) -> list[str | None]:
+    def translate(self, texts: list[str], src: str = "fr", dst: str = "es") -> list[str | None]:
         """Traduce en orden; `None` = cuota agotada o fallo reintentable."""
         ...
 
@@ -37,9 +35,7 @@ class Translator(Protocol):
 class NullTranslator:
     """Siempre devuelve `None` (sin credenciales de Azure)."""
 
-    def translate(
-        self, texts: list[str], src: str = "fr", dst: str = "es"
-    ) -> list[str | None]:
+    def translate(self, texts: list[str], src: str = "fr", dst: str = "es") -> list[str | None]:
         return [None] * len(texts)
 
 
@@ -49,9 +45,7 @@ def _split_batches(texts: list[str]) -> list[list[str]]:
     current: list[str] = []
     current_chars = 0
     for text in texts:
-        if current and (
-            len(current) >= MAX_TEXTS or current_chars + len(text) > MAX_CHARS
-        ):
+        if current and (len(current) >= MAX_TEXTS or current_chars + len(text) > MAX_CHARS):
             batches.append(current)
             current = []
             current_chars = 0
@@ -137,15 +131,11 @@ class AzureTranslator:
             if resp.status_code == 429 and attempt < _MAX_ATTEMPTS - 1:
                 self._sleep(2.0**attempt)
                 continue
-            _logger.warning(
-                "translator fallo %s: %s", resp.status_code, redact(resp.text)
-            )
+            _logger.warning("translator fallo %s: %s", resp.status_code, redact(resp.text))
             return None
         return None  # inalcanzable: el último intento siempre retorna
 
-    def translate(
-        self, texts: list[str], src: str = "fr", dst: str = "es"
-    ) -> list[str | None]:
+    def translate(self, texts: list[str], src: str = "fr", dst: str = "es") -> list[str | None]:
         """Traduce por lotes; el tope o un fallo deja `None` en el resto."""
         out: list[str | None] = [None] * len(texts)
         offset = 0
@@ -153,9 +143,7 @@ class AzureTranslator:
             chars = sum(len(text) for text in batch)
             month = current_month(self._now())
             with self._store.tx() as conn:
-                blocked = (
-                    usage_get(conn, month, METER) + chars > self._monthly_cap
-                )
+                blocked = usage_get(conn, month, METER) + chars > self._monthly_cap
             if blocked:
                 break
             translated = self._send(batch, src, dst)
@@ -168,9 +156,7 @@ class AzureTranslator:
         return out
 
 
-def translator_from_env(
-    env: Mapping[str, str], store: Store, monthly_cap: int
-) -> Translator:
+def translator_from_env(env: Mapping[str, str], store: Store, monthly_cap: int) -> Translator:
     """`NullTranslator` si falta `AZURE_TRANSLATOR_KEY` o `AZURE_TRANSLATOR_REGION`."""
     key = env.get("AZURE_TRANSLATOR_KEY")
     region = env.get("AZURE_TRANSLATOR_REGION")

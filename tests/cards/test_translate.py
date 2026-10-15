@@ -80,12 +80,8 @@ def test_usage_accumulates_in_db(store: Store, api: respx.Router) -> None:
 
 
 def test_429_retries_then_succeeds(store: Store, respx_mock: respx.Router) -> None:
-    ok = httpx.Response(
-        200, json=[{"translations": [{"text": "ES:bonjour", "to": "es"}]}]
-    )
-    respx_mock.post(ENDPOINT).mock(
-        side_effect=[httpx.Response(429), httpx.Response(429), ok]
-    )
+    ok = httpx.Response(200, json=[{"translations": [{"text": "ES:bonjour", "to": "es"}]}])
+    respx_mock.post(ENDPOINT).mock(side_effect=[httpx.Response(429), httpx.Response(429), ok])
     sleeps: list[float] = []
     t = AzureTranslator("k", "r", store, 10**6, sleep=sleeps.append)
     assert t.translate(["bonjour"]) == ["ES:bonjour"]
