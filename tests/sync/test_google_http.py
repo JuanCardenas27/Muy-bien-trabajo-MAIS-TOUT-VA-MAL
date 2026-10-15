@@ -68,9 +68,7 @@ def test_401_refreshes_once(respx_mock: respx.Router) -> None:
 def test_paginate_follows_tokens(respx_mock: respx.Router) -> None:
     route = respx_mock.get(f"{BASE}/list").mock(
         side_effect=[
-            httpx.Response(
-                200, json={"things": [{"id": "a"}, {"id": "b"}], "nextPageToken": "p2"}
-            ),
+            httpx.Response(200, json={"things": [{"id": "a"}, {"id": "b"}], "nextPageToken": "p2"}),
             httpx.Response(200, json={"things": [{"id": "c"}]}),
         ]
     )
