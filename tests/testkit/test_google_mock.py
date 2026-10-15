@@ -1,6 +1,8 @@
 """Tests de los mocks respx de Classroom/Drive/OAuth (Task FND-05)."""
 
 import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 import httpx
@@ -21,6 +23,15 @@ from google_mock import (  # noqa: E402
 )
 
 
+@contextmanager
+def mocked(scenario: str = "v1") -> Iterator[httpx.Client]:
+    """Cliente sin proxies del entorno sobre el router con mocks instalados."""
+    with respx.mock(assert_all_called=False) as router:
+        install_google_mocks(router, scenario)
+        with httpx.Client(trust_env=False) as client:
+            yield client
+
+
 def test_ts_sort_key_pads_fraction_to_nine_digits() -> None:
     assert ts_sort_key("2026-08-03T13:00:00Z") == "2026-08-03T13:00:00.000000000Z"
     assert ts_sort_key("2026-08-03T13:00:00.12Z") == "2026-08-03T13:00:00.120000000Z"
@@ -29,10 +40,9 @@ def test_ts_sort_key_pads_fraction_to_nine_digits() -> None:
 
 
 def test_coursework_pagination_and_order() -> None:
-    with respx.mock(assert_all_called=False) as router:
-        install_google_mocks(router, "v1")
-        p1 = httpx.get(f"{CW_URL}?orderBy=updateTime%20desc&pageSize=100").json()
-        p2 = httpx.get(
+    with mocked("v1") as client:
+        p1 = client.get(f"{CW_URL}?orderBy=updateTime%20desc&pageSize=100").json()
+        p2 = client.get(
             f"{CW_URL}?orderBy=updateTime%20desc&pageSize=100&pageToken={p1['nextPageToken']}"
         ).json()
     items = p1["courseWork"] + p2["courseWork"]
@@ -43,23 +53,21 @@ def test_coursework_pagination_and_order() -> None:
 
 
 def test_mock_scenarios_cover_review_focus() -> None:
-    with respx.mock(assert_all_called=False) as router:
-        install_google_mocks(router, "v1")
-        v1_meta = httpx.get(f"https://www.googleapis.com/drive/v3/files/{PDF_FILE_ID}").json()
-    with respx.mock(assert_all_called=False) as router:
-        install_google_mocks(router, "v2")
-        v2_meta = httpx.get(f"https://www.googleapis.com/drive/v3/files/{PDF_FILE_ID}").json()
+    with mocked("v1") as client:
+        v1_meta = client.get(f"https://www.googleapis.com/drive/v3/files/{PDF_FILE_ID}").json()
+    with mocked("v2") as client:
+        v2_meta = client.get(f"https://www.googleapis.com/drive/v3/files/{PDF_FILE_ID}").json()
         # El Slides se exporta a texto pero el PDF grande se rechaza (Review Focus 4).
-        txt = httpx.get(
+        txt = client.get(
             f"https://www.googleapis.com/drive/v3/files/{SLIDES_FILE_ID}/export",
             params={"mimeType": "text/plain"},
         )
-        denied = httpx.get(
+        denied = client.get(
             f"https://www.googleapis.com/drive/v3/files/{SLIDES_FILE_ID}/export",
             params={"mimeType": "application/pdf"},
         )
-        locked = httpx.get(f"https://www.googleapis.com/drive/v3/files/{LOCKED_FILE_ID}").json()
-        missing = httpx.get(f"https://www.googleapis.com/drive/v3/files/{MISSING_FILE_ID}")
+        locked = client.get(f"https://www.googleapis.com/drive/v3/files/{LOCKED_FILE_ID}").json()
+        missing = client.get(f"https://www.googleapis.com/drive/v3/files/{MISSING_FILE_ID}")
     assert v1_meta["id"] == v2_meta["id"] == PDF_FILE_ID
     assert int(v2_meta["version"]) > int(v1_meta["version"])  # Review Focus 2
     assert txt.status_code == 200 and len(txt.content) > 0
@@ -72,18 +80,16 @@ def test_mock_scenarios_cover_review_focus() -> None:
 def test_deleted_scenario_misses_one_v1_material() -> None:
     def material_ids(scenario: str) -> set[str]:
         base = f"https://classroom.googleapis.com/v1/courses/{FRENCH_COURSE_ID}"
-        with respx.mock(assert_all_called=False) as router:
-            install_google_mocks(router, scenario)
-            payload = httpx.get(f"{base}/courseWorkMaterials").json()
+        with mocked(scenario) as client:
+            payload = client.get(f"{base}/courseWorkMaterials").json()
         return {item["id"] for item in payload["courseWorkMaterial"]}
 
     assert material_ids("deleted") < material_ids("v1")
 
 
 def test_drive_download_serves_fixture_bytes(fixtures_dir: Path) -> None:
-    with respx.mock(assert_all_called=False) as router:
-        install_google_mocks(router, "v1")
-        pdf = httpx.get(
+    with mocked("v1") as client:
+        pdf = client.get(
             f"https://www.googleapis.com/drive/v3/files/{PDF_FILE_ID}", params={"alt": "media"}
         )
     expected = (fixtures_dir / "pdf" / "lesson-text.pdf").read_bytes()
@@ -91,9 +97,8 @@ def test_drive_download_serves_fixture_bytes(fixtures_dir: Path) -> None:
 
 
 def test_token_endpoint_mocked() -> None:
-    with respx.mock(assert_all_called=False) as router:
-        install_google_mocks(router, "v1")
-        resp = httpx.post("https://oauth2.googleapis.com/token", data={"grant_type": "x"})
+    with mocked("v1") as client:
+        resp = client.post("https://oauth2.googleapis.com/token", data={"grant_type": "x"})
     assert resp.status_code == 200
     assert resp.json()["access_token"] == "ya29.fixture"
 
