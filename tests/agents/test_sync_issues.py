@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 import yaml
-from test_tasks_check import REPO_ROOT, SCRIPTS
+from tests.agents.test_tasks_check import REPO_ROOT, SCRIPTS
 
 
 def load_script(name: str) -> types.ModuleType:
