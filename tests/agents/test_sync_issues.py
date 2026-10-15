@@ -10,7 +10,6 @@ from typing import Any
 
 import pytest
 import yaml
-
 from test_tasks_check import REPO_ROOT, SCRIPTS
 
 
@@ -133,9 +132,7 @@ def test_issue_title_and_labels() -> None:
     assert "- src/frances/models/" in body
 
 
-def test_dry_run_lists_but_creates_nothing(
-    fake_gh: Any, tmp_path: Path, capsys: Any
-) -> None:
+def test_dry_run_lists_but_creates_nothing(fake_gh: Any, tmp_path: Path, capsys: Any) -> None:
     path = write_tasks_yaml(tmp_path, syn_tasks())
     assert si.main(["--repo", "o/r", "--tasks", str(path)]) == 0
     calls = read_calls(fake_gh.calls)
@@ -153,7 +150,14 @@ def test_apply_creates_then_edits_idempotently(fake_gh: Any, tmp_path: Path) -> 
     creates = [c for c in first if c[:2] == ["issue", "create"]]
     assert len(creates) == 3
     c1 = next(c for c in creates if "[FND-01] Scaffold del monorepo" in c)
-    assert c1[:6] == ["issue", "create", "--repo", "o/r", "--title", "[FND-01] Scaffold del monorepo"]
+    assert c1[:6] == [
+        "issue",
+        "create",
+        "--repo",
+        "o/r",
+        "--title",
+        "[FND-01] Scaffold del monorepo",
+    ]
     assert label_values(c1, "--label") == ["task", "wave:0", "plan:P01"]
     assert '"close"' not in json.dumps(first)
 

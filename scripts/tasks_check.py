@@ -63,7 +63,7 @@ def _find_cycles(by_id: dict[str, Task]) -> list[list[str]]:
             if dep not in by_id:
                 continue
             if color[dep] == 1:
-                cycles.append(stack[stack.index(dep):] + [dep])
+                cycles.append([*stack[stack.index(dep) :], dep])
             elif color[dep] == 0:
                 visit(dep, stack)
         stack.pop()
@@ -110,7 +110,7 @@ def validate(
     for cycle in _find_cycles(by_id):
         errors.append(f"ciclo detectado: {' -> '.join(cycle)}")
     for i, a in enumerate(tasks):
-        for b in tasks[i + 1:]:
+        for b in tasks[i + 1 :]:
             for o1 in a.owns:
                 for o2 in b.owns:
                     if o1 == o2 or (o1.endswith("/") and o2.startswith(o1)):
@@ -124,8 +124,7 @@ def validate(
                     continue
                 if owner.id not in _transitive_deps(other, by_id):
                     errors.append(
-                        f"placeholder sin dependencia: {ph} "
-                        f"(de {owner.id}) en owns de {other.id}"
+                        f"placeholder sin dependencia: {ph} (de {owner.id}) en owns de {other.id}"
                     )
     if check_plans:
         root = Path(repo_root)
@@ -166,9 +165,7 @@ def merged_ids(log_subjects: list[str]) -> set[str]:
 
 
 def ready(tasks: list[Task], merged: set[str]) -> list[str]:
-    return sorted(
-        t.id for t in tasks if t.id not in merged and all(d in merged for d in t.deps)
-    )
+    return sorted(t.id for t in tasks if t.id not in merged and all(d in merged for d in t.deps))
 
 
 def main(argv: list[str] | None = None) -> int:

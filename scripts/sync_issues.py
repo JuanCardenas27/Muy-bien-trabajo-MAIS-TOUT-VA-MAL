@@ -63,9 +63,7 @@ def plan_commands(
 ) -> list[list[str]]:
     """Comandos `gh` finales (con `--repo`): labels primero, luego create/edit."""
     waves_by_id = wave_of(tasks)
-    labels = sorted(
-        {label for t in tasks for label in issue_labels(t, waves_by_id[t.id])}
-    )
+    labels = sorted({label for t in tasks for label in issue_labels(t, waves_by_id[t.id])})
     cmds = [["gh", "label", "create", label, "--repo", repo, "--force"] for label in labels]
     for t in tasks:
         body = issue_body(t, plans)
