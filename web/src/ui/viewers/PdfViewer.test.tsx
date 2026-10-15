@@ -40,7 +40,5 @@ test('pdf viewer pages through document', async () => {
     screen.getByRole('button', { name: 'Página siguiente' }),
   );
   expect(screen.getByText('Página 2 de 3')).toBeTruthy();
-  expect(
-    screen.getByRole('button', { name: 'Página anterior' }),
-  ).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Página anterior' })).toBeTruthy();
 });
