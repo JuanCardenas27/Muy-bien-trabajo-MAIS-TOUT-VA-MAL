@@ -86,9 +86,21 @@ def ctx_with_blobs(tmp_path: Path, mime_by_key: dict[str, str]) -> StageContext:
     blobs = BlobStore(ctx.paths)
     for key, mime in mime_by_key.items():
         native = mime.startswith(NATIVE_PREFIX)
-        blob_sha = None if native else blobs.put_bytes(f"contenido {key}".encode("utf-8"))[0]
-        export_text = blobs.put_bytes(f"texte exporté {key}".encode("utf-8"))[0] if native else None
+        rows: list[tuple[str, int, str]] = []
+        if native:
+            export_sha, size = blobs.put_bytes(f"texte exporté {key}".encode("utf-8"))
+            rows.append((export_sha, size, "text/plain"))
+            blob_sha, export_text = None, export_sha
+        else:
+            blob_sha, size = blobs.put_bytes(f"contenido {key}".encode("utf-8"))
+            rows.append((blob_sha, size, mime))
+            export_text = None
         with ctx.store.tx() as conn:
+            for sha, blob_size, blob_mime in rows:
+                conn.execute(
+                    "INSERT INTO blobs (sha256, size, mime_type, created_at) VALUES (?, ?, ?, ?)",
+                    (sha, blob_size, blob_mime, NOW),
+                )
             conn.execute(
                 f"{ATT_COLUMNS} VALUES (?, 'i1', 'drive_file', ?, 'Titre',"
                 f" 'https://drive.example/f{key}', ?, '1', ?, NULL, ?, 'downloaded', NULL, 0, ?,"
