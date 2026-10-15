@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 import json
 import struct
 import subprocess
@@ -15,9 +16,7 @@ def _run(cmd: list[str]) -> None:
     subprocess.run(cmd, check=True, capture_output=True)
 
 
-def make_sine_wav(
-    path: Path, seconds: float = 1.0, rate: int = 44100, channels: int = 2
-) -> Path:
+def make_sine_wav(path: Path, seconds: float = 1.0, rate: int = 44100, channels: int = 2) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     _run(
         [
@@ -86,7 +85,7 @@ def dominant_frequency(path: Path, rate: int = 24000) -> float:
     n = len(raw) // 2
     samples = struct.unpack(f"<{n}h", raw[: n * 2])
     samples = samples[2000:-2000]
-    crossings = sum(1 for a, b in zip(samples, samples[1:]) if (a < 0) != (b < 0))
+    crossings = sum(1 for a, b in itertools.pairwise(samples) if (a < 0) != (b < 0))
     return crossings / 2 / (len(samples) / rate)
 
 
