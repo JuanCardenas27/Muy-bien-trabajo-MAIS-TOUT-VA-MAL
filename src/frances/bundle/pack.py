@@ -3,23 +3,27 @@
 import hashlib
 from pathlib import Path
 
+from pydantic import BaseModel, ConfigDict
+
 from frances.bundle.frb1 import encrypt, file_id
 from frances.errors import FrancesError
 
-try:  # FND-02 define el contrato canonico; fallback provisional hasta su merge.
-    from frances.models.bundle import FileRef
-except ModuleNotFoundError:  # pragma: no cover
-    from pydantic import BaseModel, ConfigDict
 
-    class FileRef(BaseModel):
-        """Referencia a un blob publicado (provisional; canonica en FND-02)."""
+class FileRef(BaseModel):
+    """Referencia a un blob publicado.
 
-        model_config = ConfigDict(extra="forbid", frozen=True)
+    PROVISIONAL: el contrato canonico vive en FND-02 (``frances.models.bundle``),
+    aun sin fusionar. Cuando FND-02 entre a main, reemplazar esta clase por
+    ``from frances.models.bundle import FileRef``. (El try/except anterior rompia
+    ``mypy --strict``: import-untyped + no-redef.)
+    """
 
-        id: str
-        size: int
-        mime: str
-        sha256: str
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    id: str
+    size: int
+    mime: str
+    sha256: str
 
 
 _MB = 1024 * 1024
