@@ -47,7 +47,7 @@ class CallLog(list[tuple[str, str, str]]):
 def fake_communicate(
     monkeypatch: pytest.MonkeyPatch,
     *,
-    writes: bytes = b"ID3fake",
+    writes: bytes | None = b"ID3fake",
     raises: BaseException | None = None,
 ) -> CallLog:
     """Sustituye edge_tts.Communicate por un doble que graba llamadas."""
@@ -64,7 +64,8 @@ def fake_communicate(
             calls.kwargs.append(dict(self._kwargs))
             if raises is not None:
                 raise raises
-            Path(output).write_bytes(writes)
+            if writes is not None:
+                Path(output).write_bytes(writes)
 
     monkeypatch.setattr("edge_tts.Communicate", FakeCommunicate)
     return calls
@@ -75,48 +76,43 @@ def test_synthesize_calls_communicate_with_voice_id(
 ) -> None:
     calls = fake_communicate(monkeypatch, writes=b"ID3fake")
     asyncio.run(
-        EdgeEngine().synthesize(
-            "Bonjour", make_voice("fr-FR-DeniseNeural"), tmp_path / "a.mp3"
-        )
+        EdgeEngine().synthesize("Bonjour", make_voice("fr-FR-DeniseNeural"), tmp_path / "a.mp3")
     )
     assert calls == [("Bonjour", "fr-FR-DeniseNeural", str(tmp_path / "a.mp3"))]
 
 
-def test_network_error_is_retryable(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_network_error_is_retryable(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     fake_communicate(monkeypatch, raises=aiohttp.ClientError("boom"))
     with pytest.raises(EngineError) as exc_info:
         asyncio.run(
-            EdgeEngine().synthesize(
-                "Bonjour", make_voice("fr-FR-DeniseNeural"), tmp_path / "a.mp3"
-            )
+            EdgeEngine().synthesize("Bonjour", make_voice("fr-FR-DeniseNeural"), tmp_path / "a.mp3")
         )
     assert exc_info.value.retryable is True
 
 
-def test_unknown_voice_not_retryable(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_unknown_voice_not_retryable(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     fake_communicate(monkeypatch, raises=NoAudioReceived("no audio received"))
     with pytest.raises(EngineError) as exc_info:
         asyncio.run(
-            EdgeEngine().synthesize(
-                "Bonjour", make_voice("fr-FR-DeniseNeural"), tmp_path / "a.mp3"
-            )
+            EdgeEngine().synthesize("Bonjour", make_voice("fr-FR-DeniseNeural"), tmp_path / "a.mp3")
         )
     assert exc_info.value.retryable is False
 
 
-def test_empty_output_not_retryable(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_empty_output_not_retryable(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     fake_communicate(monkeypatch, writes=b"")
     with pytest.raises(EngineError) as exc_info:
         asyncio.run(
-            EdgeEngine().synthesize(
-                "Bonjour", make_voice("fr-FR-DeniseNeural"), tmp_path / "a.mp3"
-            )
+            EdgeEngine().synthesize("Bonjour", make_voice("fr-FR-DeniseNeural"), tmp_path / "a.mp3")
+        )
+    assert exc_info.value.retryable is False
+
+
+def test_missing_output_not_retryable(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    fake_communicate(monkeypatch, writes=None)
+    with pytest.raises(EngineError) as exc_info:
+        asyncio.run(
+            EdgeEngine().synthesize("Bonjour", make_voice("fr-FR-DeniseNeural"), tmp_path / "a.mp3")
         )
     assert exc_info.value.retryable is False
 
@@ -142,16 +138,12 @@ def test_synthetic_voice_uses_base_voice_and_pitch(
         age="child",
     )
     asyncio.run(EdgeEngine().synthesize("Bonjour", child_m, tmp_path / "a.mp3"))
-    assert calls == [
-        ("Bonjour", "fr-FR-RemyMultilingualNeural", str(tmp_path / "a.mp3"))
-    ]
+    assert calls == [("Bonjour", "fr-FR-RemyMultilingualNeural", str(tmp_path / "a.mp3"))]
     assert calls.kwargs == [{"pitch": "+60Hz"}]
 
 
 @pytest.mark.heavy
 def test_real_edge_smoke(tmp_path: Path) -> None:
     out = tmp_path / "smoke.mp3"
-    asyncio.run(
-        EdgeEngine().synthesize("Bonjour", make_voice("fr-FR-DeniseNeural"), out)
-    )
+    asyncio.run(EdgeEngine().synthesize("Bonjour", make_voice("fr-FR-DeniseNeural"), out))
     assert out.stat().st_size > 1024

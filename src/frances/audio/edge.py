@@ -5,7 +5,6 @@ escribe MP3. Sin reintentos aquí: los hace la etapa ``run_audio`` (AUD-06)
 según ``EngineError.retryable``.
 """
 
-import asyncio
 from pathlib import Path
 
 import aiohttp
@@ -36,9 +35,7 @@ class EdgeEngine:
     def __init__(self, concurrency_hint: int = 2) -> None:
         self.concurrency_hint = concurrency_hint
 
-    async def synthesize(
-        self, text: str, voice: Voice, out_wav_or_mp3: Path
-    ) -> None:
+    async def synthesize(self, text: str, voice: Voice, out_wav_or_mp3: Path) -> None:
         """Sintetiza ``text`` con ``voice`` y escribe MP3 en ``out_wav_or_mp3``.
 
         Las voces sintéticas usan su voz base de Edge
@@ -49,7 +46,7 @@ class EdgeEngine:
         try:
             communicate = edge_tts.Communicate(text, edge_voice, pitch=pitch)
             await communicate.save(str(out_wav_or_mp3))
-        except (aiohttp.ClientError, asyncio.TimeoutError, WebSocketError) as exc:
+        except (TimeoutError, aiohttp.ClientError, WebSocketError) as exc:
             raise EngineError(
                 f"edge-tts transitorio con voz {edge_voice}: {exc}",
                 retryable=True,
