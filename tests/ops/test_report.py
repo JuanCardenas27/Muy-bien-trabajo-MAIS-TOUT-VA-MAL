@@ -3,11 +3,11 @@ import json
 import pytest
 from typer.testing import CliRunner
 
-from frances.cli import app
+from frances.cli import app, load_commands
 from frances.ops import report
-from frances.ops.report import issue_for, report_failure, render_body
+from frances.ops.report import issue_for, render_body, report_failure
 
-report.register(app)
+load_commands(app)
 
 
 @pytest.fixture
@@ -41,7 +41,14 @@ def test_creates_issue_when_none_open() -> None:
     assert issue_for(1) == ("pipeline-failure", "El pipeline diario falló")
     gh = FakeGh([])
     assert report_failure(SUMMARY, RUN, 1, "o/repo", gh) == "created"
-    assert ["label", "create", "pipeline-failure", "--force", "--repo", "o/repo"] == gh.calls[0][0][:6]
+    assert gh.calls[0][0][:6] == [
+        "label",
+        "create",
+        "pipeline-failure",
+        "--force",
+        "--repo",
+        "o/repo",
+    ]
     create = next(a for a, _ in gh.calls if a[:2] == ["issue", "create"])
     assert "--title" in create and "El pipeline diario falló" in create and "--body-file" in create
 
@@ -61,7 +68,9 @@ def test_issue_body_has_only_stage_status_and_counts() -> None:
 
 
 def test_body_rejects_non_slug_stage_and_non_int_counts() -> None:
-    body = render_body({"reports": [{"stage": "Mme Dupont", "status": "ok", "counts": {"x": "Leçon"}}]}, RUN, 1)
+    body = render_body(
+        {"reports": [{"stage": "Mme Dupont", "status": "ok", "counts": {"x": "Leçon"}}]}, RUN, 1
+    )
     assert "Dupont" not in body and "Leçon" not in body and "| ? | ok |  |" in body
 
 
