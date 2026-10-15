@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Lee `AGENTS.md` antes de tomar una tarea.
 
-**Goal:** Medir lo que el diseño da por supuesto (voces Edge, voces infantiles, clonación en CPU, JSON de Azure, OAuth UNAL, LLM) y dejar el monorepo, los contratos, el núcleo, el store SQLite, los fixtures sintéticos y el validador del grafo listos para que las olas 2+ trabajen en paralelo.
+**Goal:** Medir lo que el diseño da por supuesto (voces Edge, voces jóvenes sintéticas, JSON de Azure, OAuth UNAL, LLM) y dejar el monorepo, los contratos, el núcleo, el store SQLite, los fixtures sintéticos y el validador del grafo listos para que las olas 2+ trabajen en paralelo.
 
 **Architecture:** Seis spikes que terminan en un ADR cada uno (`docs/decisions/ADR-00N-*.md`) y seis tareas de fundación: scaffold uv + Vite (FND-01), núcleo `frances` (FND-04), contratos pydantic + JSON Schema + tipos TS (FND-02), Store SQLite con dump determinista (FND-03), fixtures sintéticos + mocks respx (FND-05) y herramientas del grafo de tareas (AGT-01).
 
-**Tech Stack:** Python 3.11–3.13, uv, Typer, pydantic v2, pytest + pytest-socket + respx, ruff, mypy strict, reportlab, Pillow, pypdfium2, PyYAML · Node 22, Vite, React, TypeScript strict, vitest, json-schema-to-typescript · edge-tts, Chatterbox Multilingual, coqui-tts (XTTS v2), faster-whisper (solo spikes) · `gh`.
+**Tech Stack:** Python 3.11–3.13, uv, Typer, pydantic v2, pytest + pytest-socket + respx, ruff, mypy strict, reportlab, Pillow, pypdfium2, PyYAML · Node 22, Vite, React, TypeScript strict, vitest, json-schema-to-typescript · edge-tts, azure-cognitiveservices-speech (solo spikes, en GitHub Actions) · `gh`.
 
 **Spec:** `docs/superpowers/specs/2026-10-14-frances-classroom-design.md`
 
@@ -59,58 +59,44 @@ Deps: []
 - [ ] **Step 5:** Llenar ADR-001 con la plantilla. Decisión: concurrencia = el mayor nivel con error rate 0 y latencia p95 < 2× la de concurrencia 1 (2 si empatan). Consecuencias para AUD-01, AUD-03, AUD-06.
 - [ ] **Step 6:** Commit: `git add scripts/spikes/spk01_edge_voices.py docs/decisions/ADR-001-edge-tts.md && git commit -m "docs(spike): ADR-001 voces y límites de Edge-TTS [SPK-01]"`.
 
-### Task SPK-02: Voces infantiles: escuchar Eloise y decidir la fuente de referencias
+### Task SPK-02: Voces jóvenes sintéticas: escuchar y fijar parámetros
 
 Deps: []   (human: true)
 
 **Files:**
+- Create: `scripts/spikes/spk02_synth_voices.py`
+- Create: `.github/workflows/spike-voices.yml`
 - Create: `docs/decisions/ADR-002-child-voices.md`
-- Create: `docs/decisions/consent-template.md`
 
 **Interfaces:**
-- Consumes: clips de SPK-01 en `.cache/spikes/spk01/` (si no existen, `uv run scripts/spikes/spk01_edge_voices.py bench --concurrency 1 --clips 20`).
-- Produces: en ADR-002 (a) `fr-FR-EloiseNeural` → `age: child` sí/no, (b) `reference_source: synthetic | consented_recording`. AUD-01 valida `consent_ref` con prefijo `guardian:` para menores; AUD-10 implementa la ruta `synthetic`.
+- Consumes: nada (usa Edge-TTS y ffmpeg dentro de GitHub Actions).
+- Produces: ADR-002 con (a) `fr-FR-EloiseNeural` → `age: child` sí/no, (b) la tabla final de las voces sintéticas (`id | derived_from | pitch_hz | shift_ratio`) que AUD-01 pone en `voices_default.yaml`. Decisión del usuario 2026-10-14: no hay clonación ni grabaciones de personas; las voces jóvenes salen de una voz Edge con el tono subido (`pitch_hz`, prosodia de Edge) y el timbre desplazado (`shift_ratio`, `asetrate`+`atempo` de ffmpeg, R-16).
 
-- [ ] Agente: dejar ADR-002 con la plantilla y la tabla vacía `Voz | ¿suena infantil? (1–5) | naturalidad (1–5) | inteligibilidad (1–5) | notas`, filas Eloise, Denise, Vivienne, con 5 frases de prueba (las de SPK-04).
-- [ ] Agente: escribir `consent-template.md` en español: quién graba (nombre, fecha, si es menor: nombre del tutor), para qué (uso personal de estudio del titular), qué se genera (clips sintéticos derivados), revocable en cualquier momento con borrado de referencia y clips, prohibida la redistribución, firma y `consent_ref` asignado (`guardian:<slug>` si es menor, `adult:<slug>` si no).
-- [ ] Humano: escuchar las 15 combinaciones y llenar la tabla.
-- [ ] Humano: decidir (a) y (b); si (b) es `consented_recording`, guardar el consentimiento firmado fuera del repo público (en `frances-data/voices/consents/`) y anotar solo su `consent_ref`.
-- [ ] Criterio de aceptación: ADR-002 con tabla llena, decisión (a) y (b) explícitas y consecuencias para AUD-01 y AUD-10; ningún dato personal en el repo público.
-- [ ] Commit: `docs(spike): ADR-002 voces infantiles y plantilla de consentimiento [SPK-02]`.
-
-### Task SPK-03: Benchmark de clonación en CPU: Chatterbox vs XTTS v2
-
-Deps: []
-
-**Files:**
-- Create: `scripts/spikes/spk03_clone_bench.py`
-- Create: `docs/decisions/ADR-003-clone-engine.md`
-
-**Interfaces:**
-- Consumes: nada (la referencia se genera con Edge, fr-FR-EloiseNeural).
-- Produces: ADR-003 con `default_engine: chatterbox | xtts`, versiones exactas (`chatterbox-tts`, `coqui-tts`, `torch`, `faster-whisper`) y `clips_per_hour_12c`. AUD-07 fija esas versiones en `clone/pyproject.toml`; AUD-09 usa la estimación para `clone.max_per_run` (hoy 400).
-
-- [ ] **Step 1:** Escribir el script sin dependencias de motor en PEP 723 (chocan entre sí); se corre una vez por motor con `uv run --python 3.11 --with <pins> scripts/spikes/spk03_clone_bench.py --engine chatterbox|xtts`. Subcomandos: `make-ref` (10–15 s con Eloise → `.cache/spikes/spk03/ref.wav`, 24 kHz mono), `run --engine E` (30 frases fijas en el script, 10 de 1–3 palabras; por clip: segundos, RTF = segundos/duración, RAM pico con `psutil` del proceso; transcribe con faster-whisper `small` `compute_type="int8"` `device="cpu"`, `language="fr"`; CER con `jiwer.cer` sobre `norm` minúsculas sin puntuación; escribe `.cache/spikes/spk03/<engine>.json`), `report` (une los JSON en tabla Markdown).
-- [ ] **Step 2:** XTTS con `COQUI_TOS_AGREED=1`, modelo `tts_models/multilingual/multi-dataset/xtts_v2`; Chatterbox con `language_id="fr"`. Criterio: ambos JSON con 30 filas.
-- [ ] **Step 3:** ADR-003: tabla `motor | s/clip medio | RTF | RAM pico GB | CER medio | % CER>0.15 (todas) | % CER>0.15 (1–3 palabras) | licencia`. Decisión: menor % CER>0.15; desempate por s/clip. `clips_per_hour_12c = 3600 / s_por_clip × (1 / (1 + %fallo))`, recomienda `max_per_run`. Consecuencias para AUD-07, AUD-08, AUD-09. Licencias: Chatterbox MIT; XTTS v2 CPML no comercial, confinado a `clone/`.
-- [ ] **Step 4: Commit:** `docs(spike): ADR-003 motor de clonación por benchmark [SPK-03]`.
+- [ ] Agente: `spk02_synth_voices.py` (PEP 723, `edge-tts==<exacta de ADR-001>`): por cada candidata de la tabla de AUD-01 y por 3 variantes alrededor (`pitch_hz` ±15, `shift_ratio` ±0.05), sintetiza las 5 frases de SPK-04 y aplica `asetrate=24000*r,aresample=24000,atempo=1/r`; además Eloise, Denise y Vivienne sin cambios. Escribe `out/<voz>__p<pitch>__s<ratio>__<frase>.mp3` y `out/index.html` (una tabla con un `<audio controls>` por clip, para escuchar en el navegador).
+- [ ] Agente: `spike-voices.yml`: `on: workflow_dispatch`, `permissions: {contents: read}`, sin `secrets.*`; instala ffmpeg, corre el script y sube `out/` con `actions/upload-artifact` (fijada por SHA).
+- [ ] Agente: dejar ADR-002 con la plantilla y la tabla vacía `Voz | variante | ¿edad creíble? (1–5) | naturalidad (1–5) | inteligibilidad (1–5) | notas`.
+- [ ] Humano (navegador): Actions → «spike-voices» → Run workflow; descargar el artifact, abrir `index.html`, escuchar y llenar la tabla; elegir una variante por voz y decidir (a).
+- [ ] Criterio de aceptación: ADR-002 con tabla llena, decisiones (a) y (b) y consecuencias para AUD-01.
+- [ ] Commit: `docs(spike): ADR-002 voces jóvenes sintéticas [SPK-02]`.
 
 ### Task SPK-04: Capturar fixtures reales de Azure Pronunciation fr-FR
 
 Deps: []   (human: true)
 
 **Files:**
-- Create: `scripts/spikes/spk04_make_audio.py`
+- Create: `scripts/spikes/spk04_azure.py`
+- Create: `.github/workflows/spike-azure.yml`
 - Create: `tests/fixtures/azure/{bonjour,beau,enfants,rendezvous,restaurant,vin,miscue_marche}.json` (7 archivos)
 - Create: `docs/decisions/ADR-004-azure-phonemes.md`
 
 **Interfaces:**
-- Consumes: `~/Escritorio/Azure/azure_pronunciation_test.py` (fuera del repo; lee `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION`, `REFERENCE_TEXT`, `AUDIO_FILE`, `DUMP_JSON`).
-- Produces: fixtures `tests/fixtures/azure/{bonjour,beau,enfants,rendezvous,restaurant,vin,miscue_marche}.json` (R-22, en el orden de las frases del primer paso); ADR-004 con la forma del JSON, el alfabeto de fonemas fr-FR, si hay `AccuracyScore` por fonema, y la tabla `espeak-ng IPA | etiqueta Azure`. PRN-01 parsea esos fixtures; CRD-06 implementa la tabla en `phoneme_map.py`.
+- Consumes: secretos `AZURE_SPEECH_KEY` y `AZURE_SPEECH_REGION` del environment `production` del repo de producción (R-30). Todo corre en GitHub Actions.
+- Produces: fixtures `tests/fixtures/azure/{bonjour,beau,enfants,rendezvous,restaurant,vin,miscue_marche}.json` (R-22, en el orden de las frases de abajo); ADR-004 con la forma del JSON, el alfabeto de fonemas fr-FR, si hay `AccuracyScore` por fonema, y la tabla `espeak-ng IPA | etiqueta Azure`. PRN-01 parsea esos fixtures; CRD-06 implementa la tabla en `phoneme_map.py`.
 
-- [ ] Agente: `spk04_make_audio.py` (PEP 723, `edge-tts==<exacta de ADR-001>`) sintetiza con fr-FR-DeniseNeural y convierte con `ffmpeg -ar 16000 -ac 1 -c:a pcm_s16le` a `.cache/spikes/spk04/<slug>.wav`. Frases: "Bonjour, comment allez-vous ?", "Il fait beau en France.", "Les enfants chantent une chanson.", "J'ai rendez-vous à onze heures.", "Le restaurant est très grand.", "Un bon vin blanc."; miscue: audio de "Nous allons au marché." con referencia "Nous allons au marché demain.". Imprime por slug la línea exacta: `REFERENCE_TEXT='…' AUDIO_FILE=… DUMP_JSON=tests/fixtures/azure/<slug>.json python ~/Escritorio/Azure/azure_pronunciation_test.py`.
+- [ ] Agente: `spk04_azure.py` (PEP 723, `edge-tts==<exacta de ADR-001>` y `azure-cognitiveservices-speech==<exacta>`): sintetiza cada frase con fr-FR-DeniseNeural, la convierte con `ffmpeg -ar 16000 -ac 1 -c:a pcm_s16le` y la evalúa con `PronunciationAssessmentConfig(reference_text, HundredMark, Phoneme, enable_miscue=True)`, locale `fr-FR`; guarda el JSON crudo de `PropertyId.SpeechServiceResponse_JsonResult` en `out/<slug>.json`. Frases: "Bonjour, comment allez-vous ?", "Il fait beau en France.", "Les enfants chantent une chanson.", "J'ai rendez-vous à onze heures.", "Le restaurant est très grand.", "Un bon vin blanc."; miscue: audio de "Nous allons au marché." con referencia "Nous allons au marché demain.". Nunca imprime la clave.
+- [ ] Agente: `spike-azure.yml`: `on: workflow_dispatch`, job con `if: vars.FRANCES_PROD == 'true'` y `environment: {name: production}`, `permissions: {contents: read}`; secretos solo en el `env:` del step que corre el script; sube `out/` con `actions/upload-artifact`.
 - [ ] Agente: dejar ADR-004 con plantilla; para el mapa, correr `espeak-ng -q -v fr-fr --ipa "<frase>"` por frase y prellenar la columna IPA.
-- [ ] Humano: confirmar granularidad `Phoneme` y `EnableMiscue=true` en el script; correr las 7 líneas.
+- [ ] Humano (navegador): en el repo de producción, crear el environment `production` (LIVE-01 paso 6) y cargar `AZURE_SPEECH_KEY` y `AZURE_SPEECH_REGION` (Settings → Environments → production → Add secret); variable `FRANCES_PROD = true`; Actions → «spike-azure» → Run workflow; descargar el artifact y adjuntarlo al PR de esta tarea (o pasárselo al agente).
 - [ ] Humano + agente: verificar que cada JSON tiene `NBest[0].PronunciationAssessment`, `NBest[0].Words[].PronunciationAssessment.ErrorType` y `Words[].Phonemes[]`; el miscue trae `ErrorType: "Omission"` en "demain". Llenar la columna Azure del mapa.
 - [ ] Criterio de aceptación: 7 JSON válidos sin la clave ni la región; ADR-004 con forma, alfabeto, puntaje por fonema (sí/no) y mapa completo para los fonemas de las 7 frases (al menos ɑ̃ ɔ̃ ɛ̃ e ɛ ʁ). Consecuencias para CRD-06 y PRN-01.
 - [ ] Commit: `test(fixtures): JSON reales de Azure fr-FR y ADR-004 [SPK-04]`.
@@ -124,15 +110,15 @@ Deps: []   (human: true)
 
 **Interfaces:**
 - Consumes: scopes de `frances.sync.auth.SCOPES` (plan maestro).
-- Produces: ADR-005: proyecto creado, estado de publicación, resultado por scope, errores vistos y plan B. LIVE-01 lo sigue; SYN-01 usa el flujo probado.
+- Produces: ADR-005: proyecto creado, estado de publicación, resultado por scope, errores vistos y plan B. LIVE-01 sigue el mismo flujo (todo en el navegador, con OAuth Playground) para obtener el refresh token.
 
-- [ ] Agente: dejar ADR-005 con plantilla y, en «Cómo reproducir», el script de un solo uso (no va al repo como archivo): `uv run --with google-auth-oauthlib==<exacta> --with google-api-python-client==<exacta> python probe.py` con `InstalledAppFlow.from_client_secrets_file("client_secret.json", SCOPES).run_local_server(port=0)`, luego `courses().list(pageSize=10)`, `courseWork().list(courseId=…, pageSize=1)` y `files().get_media` del primer `driveFile`, escribiendo a `/tmp`. Imprime solo conteos y códigos HTTP, nunca nombres ni contenido.
-- [ ] Humano: crear proyecto GCP; habilitar Classroom API y Drive API; pantalla de consentimiento External, estado «In production»; agregar los 6 scopes; crear cliente OAuth «Desktop app»; guardar `client_secret*.json` fuera del repo.
-- [ ] Humano: correr el script con la cuenta UNAL. Anotar: advertencia de app no verificada (sí/no), `admin_policy_enforced` / `access_denied` (sí/no), resultado de cada llamada y si `drive.readonly` descarga.
-- [ ] Criterio de aceptación: tabla `scope / llamada | resultado | código` llena; decisión «API directa» o «plan B: `frances sync` en el PC con cron local que empuja a `frances-data`». Consecuencias para SYN-01, LIVE-01, OPS-05.
+- [ ] Agente: dejar ADR-005 con plantilla y, en «Cómo reproducir», los pasos de abajo y las URLs exactas a probar en el paso 3 de OAuth Playground: `GET https://classroom.googleapis.com/v1/courses?pageSize=10`, `GET https://classroom.googleapis.com/v1/courses/<id>/courseWork?pageSize=1` y `GET https://www.googleapis.com/drive/v3/files/<id>?alt=media` del primer `driveFile`. Se anotan solo códigos HTTP y conteos, nunca nombres ni contenido.
+- [ ] Humano (navegador, Google Cloud Console): crear el proyecto; habilitar Classroom API y Drive API; pantalla de consentimiento External, estado «In production»; agregar los 6 scopes; crear un cliente OAuth tipo **Web application** con URI de redirección `https://developers.google.com/oauthplayground`.
+- [ ] Humano (navegador, [OAuth Playground](https://developers.google.com/oauthplayground)): engranaje → «Use your own OAuth credentials» con el client ID y secret del paso anterior (así el token no se revoca a las 24 h); pegar los 6 scopes; «Authorize APIs» con la cuenta UNAL; «Exchange authorization code for tokens»; probar las 3 URLs. Anotar: advertencia de app no verificada (sí/no), `admin_policy_enforced` / `access_denied` (sí/no), código de cada llamada y si `drive.readonly` descarga.
+- [ ] Criterio de aceptación: tabla `scope / llamada | resultado | código` llena; decisión «API directa» o «sin plan B: el proyecto no puede sincronizar» (no hay ejecución en el PC). Consecuencias para SYN-01, LIVE-01, OPS-05.
 - [ ] Commit: `docs(spike): ADR-005 OAuth Google y acceso UNAL [SPK-05]`.
 
-### Task SPK-06: LLM en Azure AI Foundry con Azure for Students
+### Task SPK-06: Elegir proveedor LLM con API compatible con OpenAI
 
 Deps: []   (human: true)
 
@@ -142,13 +128,13 @@ Deps: []   (human: true)
 
 **Interfaces:**
 - Consumes: env `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`.
-- Produces: ADR-006 con disponibilidad, formato de `base_url`, header de auth que funciona (`Authorization: Bearer` o `api-key`), precio por 1M tokens entrada/salida y costo de 30 publicaciones/día × ~4k tokens × 30 días. CRD-04 implementa ese cliente; si no hay disponibilidad, `cards.llm = "off"` en `frances-data`.
+- Produces: ADR-006 con el proveedor y modelo elegidos (decisión del usuario 2026-10-14: API key propia de un proveedor con API compatible con OpenAI, sin depender de Azure), formato de `base_url`, header de auth que funciona (`Authorization: Bearer` o `api-key`), precio por 1M tokens entrada/salida y costo de 30 publicaciones/día × ~4k tokens × 30 días. CRD-04 implementa ese cliente; si no hay disponibilidad, `cards.llm = "off"` en `frances-data`.
 
 - [ ] Agente: `spk06_llm_probe.py` solo stdlib (`urllib.request`), `--auth bearer|api-key`. POST `{LLM_BASE_URL}/chat/completions` con `model`, un mensaje de sistema y uno de usuario (texto francés sintético de 3 líneas) y `response_format = {"type": "json_schema", "json_schema": {"name": "cards", "strict": true, "schema": <CardDraft-like mínimo: {cards: [{front_fr, back_es}]}>}}`. Imprime código HTTP, latencia, `usage` y si el contenido parsea y cumple el esquema. Nunca imprime la clave (enmascara todo menos 4 caracteres).
-- [ ] Humano: intentar desplegar un modelo chico en Azure AI Foundry con Azure for Students; anotar región, nombre del modelo y si la cuota lo permite.
-- [ ] Humano: correr el probe con ambos `--auth`. Criterio: JSON válido contra el esquema strict, o el error exacto.
-- [ ] Criterio de aceptación: ADR-006 con tabla `modelo | región | auth | strict json_schema OK | USD/1M in | USD/1M out | USD/mes estimado`; decisión `llm = auto` u `off`. Consecuencias para CRD-04 y CRD-05.
-- [ ] Commit: `docs(spike): ADR-006 LLM en Azure AI Foundry [SPK-06]`.
+- [ ] Humano: elegir el proveedor, crear una API key dedicada solo a este proyecto y, si el proveedor lo permite, ponerle un límite de gasto mensual.
+- [ ] Humano: correr el probe con ambos `--auth` contra 1–3 modelos pequeños. Criterio: JSON válido contra el esquema strict, o el error exacto. Si el modelo no soporta `json_schema` strict, anotarlo: CRD-04 valida la salida igualmente y cae a reglas si no cumple.
+- [ ] Criterio de aceptación: ADR-006 con tabla `proveedor | modelo | auth | strict json_schema OK | USD/1M in | USD/1M out | USD/mes estimado`; decisión `llm = auto` u `off`. Consecuencias para CRD-04 y CRD-05. La clave nunca aparece en el ADR.
+- [ ] Commit: `docs(spike): ADR-006 proveedor LLM [SPK-06]`.
 
 ---
 ### Task FND-01: Scaffold del monorepo (uv, ruff, mypy, pytest, Vite/React/TS, CI básico)
@@ -195,7 +181,7 @@ Run: `npm --prefix web test` → Expected: FAIL (`Cannot find module './main'`).
 
 `pyproject.toml`: `name = "frances"`, `requires-python = ">=3.11,<3.14"`, src layout (build backend `hatchling`), `[project.scripts] frances = "frances.cli:main"`. Runtime de P01: `pydantic`, `typer`, `tzdata`. Grupo `dev`: `pytest`, `pytest-socket`, `pytest-cov`, `respx`, `mypy`, `ruff`, `reportlab`, `Pillow`, `pypdfium2`, `PyYAML`, `types-PyYAML` (todas `==` exacta, `uv add --group dev …`). Las dependencias de tareas posteriores NO se declaran aquí: cada tarea agrega las suyas (R-01). ruff: `line-length = 100`, `select = ["E","F","I","B","UP","SIM","RUF"]`. mypy: `strict = true`, `packages = ["frances"]`, `mypy_path = "src"`. pytest: `addopts = "--disable-socket --allow-unix-socket -m 'not heavy' --cov=frances --cov-report=term-missing --cov-fail-under=85"`, `markers = ["heavy: red o modelos pesados; no corre en CI"]`, `testpaths = ["tests"]`.
 
-`src/frances/__init__.py`: solo `__version__ = "0.1.0"`. `.npmrc` y `web/.npmrc`: `save-exact=true` (npm con `--prefix web` lee el de `web/`). `.gitignore`: `.cache/`, `*.db`, `.env*`, `node_modules/`, `web/dist/`, `.venv/`, `__pycache__/`, `client_secret*.json`.
+`src/frances/__init__.py`: solo `__version__ = "0.1.0"`. `.npmrc` y `web/.npmrc`: `save-exact=true` (npm con `--prefix web` lee el de `web/`). `.gitignore`: `.cache/`, `*.db`, `.env*`, `node_modules/`, `web/dist/`, `.venv/`, `__pycache__/`, `client_secret*.json`, `/data/`, `/site/` (R-30).
 
 `web/`: Vite + React + TS (`npm create vite@<exacta> web -- --template react-ts` y luego recortar a los archivos de owns y placeholders). Dev deps exactas: `vitest`, `jsdom`, `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`, `fake-indexeddb`, `eslint`, `typescript-eslint`, `eslint-plugin-jsx-a11y`, `prettier`, `json-schema-to-typescript`. `vite.config.ts` (placeholder; WEB-12 le agrega `VitePWA(pwaOptions)`) usa `base: process.env.VITE_BASE ?? "/"` e incluye `test: { environment: "jsdom", globals: true }`. `tsconfig.json`: `strict: true`, `module: "ESNext"`, `jsx: "react-jsx"`, `types: ["vitest/globals", "@testing-library/jest-dom"]`. `index.html`: `<html lang="es">`, `<div id="root">` y `<script type="module" src="/src/main.tsx">`. `eslint.config.js`: flat config con `typescript-eslint` (recommended) y `eslint-plugin-jsx-a11y` (recommended), ignora `dist/`. `src/vite-env.d.ts`: `/// <reference types="vite/client" />`. `public/` queda vacío salvo `.gitkeep`. Scripts: `test = "vitest run"`, `typecheck = "tsc --noEmit"`, `lint = "eslint . && prettier --check ."`, `gen:types = "node scripts/gen-types.mjs"`. Config de prettier en la clave `"prettier"` de `package.json`. `main.tsx` (placeholder; WEB-01 lo cambia para montar `<App/>`) exporta `Root` (un `<h1>Frances</h1>` provisional) y monta en `#root` solo si existe el elemento.
 
@@ -232,7 +218,7 @@ Deps: [FND-01]
   - `timeutil.py`: `norm_ts(s: str) -> str`, `format_ts(dt: datetime) -> str` (R-06: aware → mismo formato fijo que `norm_ts`; naive → `ValueError`), `parse_ts(s: str) -> datetime` (aware, UTC), `now_utc() -> datetime`, `to_bogota(dt: datetime) -> datetime`; constante `BOGOTA = ZoneInfo("America/Bogota")`.
   - `paths.py`: `@dataclass(frozen=True) class DataPaths(root: Path)` con `config`, `voices_yaml`, `voice_refs`, `state_sql`, `state_db`, `cache` (propiedades `Path`), `blob_path(sha: str) -> Path`, `extraction_path(sha: str, ver: str) -> Path`, `audio_path(key: str) -> Path`, `ensure_dirs() -> None`; rutas exactas de la tabla del plan maestro.
   - `log.py`: `SENSITIVE_ENV: tuple[str, ...]`, `redact(text: str, env: Mapping[str, str] | None = None) -> str` (`env=None` → `os.environ`), `class RedactFilter(logging.Filter)`, `get_logger(name: str) -> logging.Logger`.
-  - `config.py`: `Settings` con un atributo anidado por sección del TOML (R-08): `classroom: ClassroomSettings`, `cards: CardsSettings`, `audio: AudioSettings`, `translator: TranslatorSettings`, `clone: CloneSettings`, `bundle: BundleSettings` (modelos pydantic `extra="forbid"`, defaults = TOML del plan maestro; p. ej. `settings.classroom.max_download_mb`, `settings.bundle.salt`), `Settings.secret(name: str) -> str`, `Settings.optional_secret(name: str) -> str | None`, `load_settings(path: Path, env: Mapping[str, str]) -> Settings`.
+  - `config.py`: `Settings` con un atributo anidado por sección del TOML (R-08): `classroom: ClassroomSettings`, `cards: CardsSettings`, `audio: AudioSettings`, `translator: TranslatorSettings`, `bundle: BundleSettings` (modelos pydantic `extra="forbid"`, defaults = TOML del plan maestro; p. ej. `settings.classroom.max_download_mb`, `settings.bundle.salt`), `Settings.secret(name: str) -> str`, `Settings.optional_secret(name: str) -> str | None`, `load_settings(path: Path, env: Mapping[str, str]) -> Settings`.
   - `cli.py`: `app = typer.Typer()`, `COMMAND_MODULES` (tupla del plan maestro, literal), `load_commands(app: typer.Typer) -> None`, `DataOpt = Annotated[Path, typer.Option("--data", help="Raíz del repo de datos")]` (uso: `data: DataOpt = Path(".")`), `exit_with(fn: Callable[[], StageReport | None]) -> NoReturn`, `main() -> None` (R-05; firmas del bloque `cli.py` de «Etapas» del plan maestro).
 
 - [ ] **Step 1: Write the failing tests** (un archivo por módulo; asserts clave)
@@ -281,7 +267,7 @@ def test_redact_env_values_and_patterns() -> None:
 def test_settings_defaults(tmp_path: Path) -> None:
     s = load_settings(tmp_path / "missing.toml", {})
     assert s.audio.fixed_voices == ["fr-FR-DeniseNeural", "fr-FR-HenriNeural"]
-    assert (s.classroom.max_download_mb, s.clone.max_per_run, s.bundle.iterations) == (50, 400, 600000)
+    assert (s.classroom.max_download_mb, s.audio.max_clips_per_run, s.bundle.iterations) == (50, 3000, 600000)
     assert s.cards.llm == "auto" and s.translator.monthly_char_cap == 1800000
 # test_settings_unknown_key_is_config_error: "[audio]\nrotatin = 2\n" → ConfigError
 # test_settings_invalid_toml_is_config_error: "[audio" → ConfigError
@@ -320,7 +306,7 @@ Run: `uv run pytest tests/core -v` → Expected: FAIL (`ModuleNotFoundError: fra
 - [ ] **Step 3: Implement**
 
 - `norm_ts`: regex `^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,9}))?(Z|[+-]\d{2}:\d{2})$`; fracción → truncar/rellenar a 6; `datetime.fromisoformat` con la zona; `astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%S.%fZ")`. Sin zona → `ValueError`. `format_ts`: `dt.tzinfo is None` → `ValueError`; si no, el mismo `astimezone(UTC).strftime(...)`.
-- `SENSITIVE_ENV = ("GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REFRESH_TOKEN", "AZURE_SPEECH_KEY", "AZURE_TRANSLATOR_KEY", "FRANCES_PASSPHRASE", "LLM_BASE_URL", "LLM_API_KEY")`. `redact` reemplaza primero los valores de esas variables de longitud ≥ 8 (más largos primero) y luego los patrones `ya29\.[\w-]+`, `1//[\w-]{20,}`, `Bearer\s+\S+`, `GOCSPX-[\w-]+` (sin patrón genérico de hex, R-07). `RedactFilter.filter` sustituye `record.msg` por `redact(record.getMessage())` y vacía `record.args`. `get_logger` usa formato `%(asctime)s %(levelname)s %(name)s: %(message)s` y agrega el filtro una sola vez.
+- `SENSITIVE_ENV = ("GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REFRESH_TOKEN", "AZURE_SPEECH_KEY", "AZURE_TRANSLATOR_KEY", "FRANCES_PASSPHRASE", "LLM_BASE_URL", "LLM_API_KEY", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY")`. `redact` reemplaza primero los valores de esas variables de longitud ≥ 8 (más largos primero) y luego los patrones `ya29\.[\w-]+`, `1//[\w-]{20,}`, `Bearer\s+\S+`, `GOCSPX-[\w-]+` (sin patrón genérico de hex, R-07). `RedactFilter.filter` sustituye `record.msg` por `redact(record.getMessage())` y vacía `record.args`. `get_logger` usa formato `%(asctime)s %(levelname)s %(name)s: %(message)s` y agrega el filtro una sola vez.
 - `load_settings`: archivo inexistente → defaults; `tomllib.TOMLDecodeError` o `ValidationError` → `ConfigError` (mensaje con la clave, sin valores). `env` se guarda en un `PrivateAttr`; `secret` lanza `ConfigError(f"falta la variable {name}")`.
 - `cli.py`: sin callback global ni `data_dir(ctx)`; cada comando declara `data: DataOpt = Path(".")` (R-05). `exit_with(fn)`: llama `fn()`; `FrancesError` → `typer.echo(redact(str(e)), err=True)` y `raise typer.Exit(e.exit_code)`; `None` → `typer.Exit(0)`; reporte → `typer.Exit(r.exit_code())`. `StageReport` vive en `stage.py` (FND-03, que depende de esta tarea), así que `cli.py` no lo importa: el tipo de retorno de `fn` es un `Protocol` local con `exit_code(self) -> int`, que `StageReport` cumple estructuralmente. `load_commands`: por cada nombre, `importlib.import_module`; si `ModuleNotFoundError` y `e.name == nombre` → saltar; si no, relanzar; luego `module.register(app)`. `main()`: `load_commands(app)` y luego `app()`.
 - `frances.example.toml`: copia del TOML del plan maestro con un comentario en español por clave.

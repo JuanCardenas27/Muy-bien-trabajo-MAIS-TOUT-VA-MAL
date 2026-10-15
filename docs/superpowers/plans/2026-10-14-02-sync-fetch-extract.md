@@ -22,7 +22,7 @@ Plan maestro: docs/superpowers/plans/2026-10-14-00-master-plan.md (Global Constr
 - `Settings` se lee por sección (R-08): `settings.classroom.include_course_ids`, `.include_name_regex`, `.max_download_mb`.
 - Ningún mensaje de error ni log incluye tokens, rutas absolutas o texto del curso: todo pasa por `frances.log.redact()`.
 - SQL solo en `sync/repo.py`, `fetch/repo.py`, `extract/repo.py`. Ninguna llamada de red dentro de `store.tx()`, salvo la excepción aceptada de SYN-04 (R-26).
-- CLI (R-05): cada comando declara `data: DataOpt = Path(".")` (salvo `auth init/check`, que no lo usan), construye el contexto con `make_context(data)` y termina con `exit_with(lambda: ...)` de `frances.cli`; nada convierte a `typer.Exit` a mano. `exit_with` mapea `FrancesError` a su `exit_code` (`AuthError` → 3, `ConfigError` → 4) y `StageReport` a `exit_code()`.
+- CLI (R-05): cada comando declara `data: DataOpt = Path(".")` (salvo `auth check`, que no lo usa), construye el contexto con `make_context(data)` y termina con `exit_with(lambda: ...)` de `frances.cli`; nada convierte a `typer.Exit` a mano. `exit_with` mapea `FrancesError` a su `exit_code` (`AuthError` → 3, `ConfigError` → 4) y `StageReport` a `exit_code()`.
 - Claves de `StageReport.counts` (R-09): prefijadas por etapa; las que marcan cambio son exactamente `sync.items_upserted`, `sync.attachments_new`, `fetch.downloaded` y `extract.extracted`.
 
 ## Review Focus
@@ -33,12 +33,13 @@ Plan maestro: docs/superpowers/plans/2026-10-14-00-master-plan.md (Global Constr
 
 ---
 
-### Task SYN-01: OAuth: frances auth init/check
+### Task SYN-01: OAuth: credenciales desde el entorno + frances auth check
 
 Deps: [FND-04, SYN-02]
 
 **Files:**
 - Create: `src/frances/sync/auth.py`
+- Create: `.github/workflows/auth-check.yml`
 - Test: `tests/sync/test_auth.py`
 
 **Interfaces:**
@@ -46,49 +47,38 @@ Deps: [FND-04, SYN-02]
 - Produces:
   - `SCOPES: tuple[str, ...]` (los 6 scopes del plan maestro, en ese orden)
   - `TOKEN_URI = "https://oauth2.googleapis.com/token"`
-  - `build_credentials(env: Mapping[str, str], config_home: Path = Path.home() / ".config/frances") -> google.oauth2.credentials.Credentials` (sin `token`; `refresh_token`, `client_id`, `client_secret`, `token_uri=TOKEN_URI`, `scopes=SCOPES`). Cada valor sale de `env` y, si falta, de `config_home/"refresh_token"` o `config_home/"client.json"` (R-23); `ConfigError` solo si falta en ambos.
-  - `register(app: typer.Typer) -> None` → `frances auth init --client-secrets PATH [--set-secret-repo OWNER/REPO]` y `frances auth check`
-  - `REAUTH_MESSAGE = "Re-autoriza: uv run frances auth init --client-secrets <client_secret.json>"`
+  - `build_credentials(env: Mapping[str, str]) -> google.oauth2.credentials.Credentials` (sin `token`; `refresh_token`, `client_id`, `client_secret` de `GOOGLE_REFRESH_TOKEN`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`; `token_uri=TOKEN_URI`, `scopes=SCOPES`). Falta una variable → `ConfigError` que la nombra (R-23).
+  - `register(app: typer.Typer) -> None` → `frances auth check`
+  - `REAUTH_MESSAGE = "Re-autoriza: genera un refresh token nuevo en OAuth Playground (LIVE-01) y reemplaza el secreto GOOGLE_REFRESH_TOKEN"`
 
 - [ ] **Step 1: Write the failing test**
 
 ```python
-def test_init_writes_token_and_client_files_0600_and_never_prints_them(tmp_path, monkeypatch):
-    monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.setattr(auth.InstalledAppFlow, "from_client_secrets_file", fake_flow("1//secret-token"))
-    res = CliRunner().invoke(make_app(), ["auth", "init", "--client-secrets", str(tmp_path / "cs.json")])
-    tok, client = tmp_path / ".config/frances/refresh_token", tmp_path / ".config/frances/client.json"
-    assert res.exit_code == 0 and tok.read_text() == "1//secret-token"
-    assert json.loads(client.read_text()) == {"client_id": "cid", "client_secret": "csecret"}
-    assert stat.S_IMODE(tok.stat().st_mode) == stat.S_IMODE(client.stat().st_mode) == 0o600
-    assert "1//secret-token" not in res.output and "csecret" not in res.output and str(tok) in res.output
-    assert fake_flow.kwargs == {"port": 0, "access_type": "offline", "prompt": "consent"}
-def test_init_set_secret_repo_pipes_three_secrets_and_still_writes_files(tmp_path, monkeypatch):
-    monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.setattr(auth.InstalledAppFlow, "from_client_secrets_file", fake_flow("1//secret-token"))
-    calls = []
-    monkeypatch.setattr(auth.subprocess, "run", lambda argv, **kw: calls.append((argv, kw)) or Done(0))
-    res = CliRunner().invoke(make_app(), ["auth", "init", "--client-secrets", "cs.json",
-                                          "--set-secret-repo", "owner/frances-data"])
-    assert [c[0] for c in calls] == [["gh", "secret", "set", n, "--repo", "owner/frances-data"]
-                                     for n in ("GOOGLE_REFRESH_TOKEN", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET")]
-    assert [c[1]["input"] for c in calls] == ["1//secret-token", "cid", "csecret"]
-    assert all("shell" not in c[1] for c in calls) and "1//secret-token" not in res.output
-    assert (tmp_path / ".config/frances/refresh_token").read_text() == "1//secret-token" and res.exit_code == 0
+FAKE_ENV = {"GOOGLE_REFRESH_TOKEN": "rt", "GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "csecret"}
+def test_build_credentials_uses_scopes_and_token_uri():
+    c = build_credentials(FAKE_ENV)
+    assert (c.refresh_token, c.client_id, c.token_uri) == ("rt", "cid", TOKEN_URI) and tuple(c.scopes) == SCOPES and len(SCOPES) == 6
+@pytest.mark.parametrize("missing", sorted(FAKE_ENV))
+def test_missing_variable_raises_config_error_naming_it(missing):
+    with pytest.raises(ConfigError, match=missing): build_credentials({k: v for k, v in FAKE_ENV.items() if k != missing})
+def test_check_ok_lists_one_course(respx_mock):
+    install_google_mocks(respx_mock, "v1")
+    res = CliRunner(env=FAKE_ENV).invoke(make_app(), ["auth", "check"])
+    assert res.exit_code == 0 and respx_mock.calls.last.request.url.params["pageSize"] == "1"
 def test_check_invalid_grant_exits_3(respx_mock):
     install_google_mocks(respx_mock, "v1")
     respx_mock.post("https://oauth2.googleapis.com/token").respond(400, json={"error": "invalid_grant"})
     res = CliRunner(env=FAKE_ENV).invoke(make_app(), ["auth", "check"])
-    assert res.exit_code == 3 and "Re-autoriza: uv run frances auth init" in res.output
+    assert res.exit_code == 3 and "OAuth Playground" in res.output and "rt" not in res.output.split()
 ```
 
-Además: `test_build_credentials_falls_back_to_files` (`env={}` y `config_home` con `refresh_token` y `client.json` → `refresh_token`, `client_id`, `client_secret` de los archivos; con `FAKE_ENV` gana el env) · `test_build_credentials_missing_everywhere_raises_config_error` (`env={}` y `config_home` vacío → `ConfigError` que nombra `GOOGLE_REFRESH_TOKEN`) · `test_build_credentials_uses_scopes_and_token_uri` (`refresh_token == "rt"`, `token_uri == TOKEN_URI`, `tuple(scopes) == SCOPES` y `len(SCOPES) == 6`) · `test_check_ok_lists_one_course` (v1 → `exit_code == 0` y la última llamada lleva `pageSize == "1"`). `make_app()` = `typer.Typer()` + `register(app)`; `fake_flow(token)` es un doble local con `client_config == {"client_id": "cid", "client_secret": "csecret"}` cuyo `run_local_server(**kwargs)` guarda `kwargs` y devuelve un objeto con `refresh_token`, `client_id` y `client_secret`; `Done` es un `subprocess.CompletedProcess` falso.
+`make_app()` = `typer.Typer()` + `register(app)`.
 
 - [ ] **Step 2: Run test to verify it fails** — Run: `uv run pytest tests/sync/test_auth.py -v` · Expected: FAIL with "ModuleNotFoundError: No module named 'frances.sync.auth'"
-- [ ] **Step 3: Implement `build_credentials(env: Mapping[str, str], config_home: Path = ...) -> Credentials` y `register(app: typer.Typer) -> None` in `src/frances/sync/auth.py`**
-`init`: `InstalledAppFlow.from_client_secrets_file(path, scopes=SCOPES).run_local_server(port=0, access_type="offline", prompt="consent")`. SIEMPRE crea `Path.home() / ".config/frances"` (resuelto al llamar) y escribe `refresh_token` y `client.json` con `os.open(path, O_WRONLY|O_CREAT|O_TRUNC, 0o600)` (nunca un archivo con permisos amplios y luego `chmod`); imprime solo las rutas. Con `--set-secret-repo`, además un `subprocess.run(["gh", "secret", "set", NAME, "--repo", REPO], input=valor, text=True, check=True)` por cada uno de los tres secretos. `check`: `api = GoogleApi(build_credentials(os.environ), "https://classroom.googleapis.com/v1")` (literal: SYN-03 no es dep); `api.refresh()`; `api.get_json("courses", {"pageSize": 1})`; un `AuthError` se re-lanza con `REAUTH_MESSAGE`. Ambos comandos terminan con `exit_with(...)`.
-- [ ] **Step 4: Run test to verify it passes** — Run: `uv run pytest tests/sync/test_auth.py -v` · Expected: PASS (7 passed)
-- [ ] **Step 5: Commit** — `git add src/frances/sync/auth.py tests/sync/test_auth.py` y `git commit -m "feat(sync): frances auth init/check [SYN-01]"`
+- [ ] **Step 3: Implement `build_credentials(env: Mapping[str, str]) -> Credentials` y `register(app: typer.Typer) -> None` in `src/frances/sync/auth.py`**
+`check`: `api = GoogleApi(build_credentials(os.environ), "https://classroom.googleapis.com/v1")` (literal: SYN-03 no es dep); `api.refresh()`; `api.get_json("courses", {"pageSize": 1})`; un `AuthError` se re-lanza con `REAUTH_MESSAGE`. Termina con `exit_with(...)`. No hay `auth init`: el refresh token se obtiene en el navegador (LIVE-01) y nunca se escribe en disco. `auth-check.yml`: `on: workflow_dispatch`, job con `if: vars.FRANCES_PROD == 'true'`, `environment: {name: production}`, `permissions: {contents: read}`; checkout, setup-uv, `uv sync --frozen` y `uv run frances auth check` con los tres `GOOGLE_*` en el `env:` del step.
+- [ ] **Step 4: Run test to verify it passes** — Run: `uv run pytest tests/sync/test_auth.py -v` · Expected: PASS (6 passed)
+- [ ] **Step 5: Commit** — `git add src/frances/sync/auth.py .github/workflows/auth-check.yml tests/sync/test_auth.py` y `git commit -m "feat(sync): credentials from env and frances auth check [SYN-01]"`
 
 ### Task SYN-02: Cliente HTTP de Google: refresh, reintentos, paginación, errores
 
