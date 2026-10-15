@@ -1,0 +1,806 @@
+{
+  "courseWork": [
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0120",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T12:23:00Z",
+      "description": "J’ai rendez-vous à onze heures. Nous allons au marché demain.",
+      "id": "cw_0120",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Le week-end en famille (exercice 120)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-06T14:23:00.301733028Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0119",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T11:46:00Z",
+      "description": "Les enfants chantent une chanson. Marie lit un livre chaque soir.",
+      "id": "cw_0119",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "À la cantine (exercice 119)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-06T13:46:00.920Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0118",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T11:09:00Z",
+      "description": "Un bon vin blanc accompagne le repas. Il fait beau en France.",
+      "id": "cw_0118",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les transports en ville (exercice 118)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-06T13:09:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0117",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T10:32:00Z",
+      "description": "Les enfants chantent une chanson. Nous allons au marché demain.",
+      "id": "cw_0117",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "La météo de la semaine (exercice 117)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-06T12:32:00.288670837Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0116",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T09:55:00Z",
+      "description": "Les enfants chantent une chanson. Le chat dort près de la fenêtre.",
+      "dueDate": {
+        "day": 8,
+        "month": 9,
+        "year": 2026
+      },
+      "id": "cw_0116",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Le futur simple (exercice 116)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-06T11:55:00.630Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0115",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T09:18:00Z",
+      "description": "Un bon vin blanc accompagne le repas. La boulangerie ouvre à sept heures.",
+      "id": "cw_0115",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les adjectifs de couleur (exercice 115)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-06T11:18:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0114",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T08:41:00Z",
+      "description": "Nous allons au marché demain. Les enfants chantent une chanson.",
+      "id": "cw_0114",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Au marché (exercice 114)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-06T10:41:00.675827511Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0113",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T08:04:00Z",
+      "description": "J’ai rendez-vous à onze heures. Marie lit un livre chaque soir.",
+      "id": "cw_0113",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "La routine du matin (exercice 113)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-06T10:04:00.468Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0112",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T07:27:00Z",
+      "description": "Un bon vin blanc accompagne le repas. Nous allons au marché demain.",
+      "id": "cw_0112",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les articles définis (exercice 112)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-06T09:27:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0111",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T06:50:00Z",
+      "description": "Nous allons au marché demain. Marie lit un livre chaque soir.",
+      "dueDate": {
+        "day": 3,
+        "month": 9,
+        "year": 2026
+      },
+      "id": "cw_0111",
+      "materials": [
+        {
+          "link": {
+            "title": "E110",
+            "url": "https://example.test/r110"
+          }
+        }
+      ],
+      "state": "PUBLISHED",
+      "title": "Le passé composé (exercice 111)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-06T08:50:00.297036346Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0110",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T06:13:00Z",
+      "description": "La boulangerie ouvre à sept heures. Les enfants chantent une chanson.",
+      "id": "cw_0110",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les loisirs créatifs (exercice 110)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-06T08:13:00.585Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0109",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T05:36:00Z",
+      "description": "Marie lit un livre chaque soir. Il fait beau en France.",
+      "id": "cw_0109",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Le week-end en famille (exercice 109)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-06T07:36:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0108",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T04:59:00Z",
+      "description": "Le chat dort près de la fenêtre. J’ai rendez-vous à onze heures.",
+      "id": "cw_0108",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "À la cantine (exercice 108)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-06T06:59:00.970979841Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0107",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T04:22:00Z",
+      "description": "Le chat dort près de la fenêtre. J’ai rendez-vous à onze heures.",
+      "id": "cw_0107",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les transports en ville (exercice 107)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-06T06:22:00.760Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0106",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T03:45:00Z",
+      "description": "Il fait beau en France. Les enfants chantent une chanson.",
+      "dueDate": {
+        "day": 25,
+        "month": 9,
+        "year": 2026
+      },
+      "id": "cw_0106",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "La météo de la semaine (exercice 106)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-06T05:45:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0105",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T03:08:00Z",
+      "description": "Un bon vin blanc accompagne le repas. Marie lit un livre chaque soir.",
+      "id": "cw_0105",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Le futur simple (exercice 105)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-06T05:08:00.981703030Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0104",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T02:31:00Z",
+      "description": "J’ai rendez-vous à onze heures. La boulangerie ouvre à sept heures.",
+      "id": "cw_0104",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les adjectifs de couleur (exercice 104)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-06T04:31:00.183Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0103",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T01:54:00Z",
+      "description": "La boulangerie ouvre à sept heures. Le restaurant est très grand.",
+      "id": "cw_0103",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Au marché (exercice 103)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-06T03:54:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0102",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T01:17:00Z",
+      "description": "J’ai rendez-vous à onze heures. Il fait beau en France.",
+      "id": "cw_0102",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "La routine du matin (exercice 102)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-06T03:17:00.876844233Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0101",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T00:40:00Z",
+      "description": "Le chat dort près de la fenêtre. Il fait beau en France.",
+      "dueDate": {
+        "day": 20,
+        "month": 9,
+        "year": 2026
+      },
+      "id": "cw_0101",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les articles définis (exercice 101)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-06T02:40:00.607Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0100",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-06T00:03:00Z",
+      "description": "Le restaurant est très grand. J’ai rendez-vous à onze heures.",
+      "id": "cw_0100",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Le passé composé (exercice 100)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-06T02:03:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0099",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T23:26:00Z",
+      "description": "Le restaurant est très grand. Nous allons au marché demain.",
+      "id": "cw_0099",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les loisirs créatifs (exercice 099)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-06T01:26:00.178201043Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0098",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T22:49:00Z",
+      "description": "Marie lit un livre chaque soir. Un bon vin blanc accompagne le repas.",
+      "id": "cw_0098",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Le week-end en famille (exercice 098)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-06T00:49:00.145Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0097",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T22:12:00Z",
+      "description": "Le chat dort près de la fenêtre. Marie lit un livre chaque soir.",
+      "id": "cw_0097",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "À la cantine (exercice 097)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-06T00:12:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0096",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T21:35:00Z",
+      "description": "Le restaurant est très grand. Les enfants chantent une chanson.",
+      "dueDate": {
+        "day": 15,
+        "month": 9,
+        "year": 2026
+      },
+      "id": "cw_0096",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les transports en ville (exercice 096)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-05T23:35:00.029840790Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0095",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T20:58:00Z",
+      "description": "La boulangerie ouvre à sept heures. Il fait beau en France.",
+      "id": "cw_0095",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "La météo de la semaine (exercice 095)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-05T22:58:00.175Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0094",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T20:21:00Z",
+      "description": "Le chat dort près de la fenêtre. La boulangerie ouvre à sept heures.",
+      "id": "cw_0094",
+      "materials": [
+        {
+          "link": {
+            "title": "E93",
+            "url": "https://example.test/r93"
+          }
+        }
+      ],
+      "state": "PUBLISHED",
+      "title": "Le futur simple (exercice 094)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-05T22:21:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0093",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T19:44:00Z",
+      "description": "Nous allons au marché demain. La boulangerie ouvre à sept heures.",
+      "id": "cw_0093",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les adjectifs de couleur (exercice 093)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-05T21:44:00.706918535Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0092",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T19:07:00Z",
+      "description": "Les enfants chantent une chanson. Le restaurant est très grand.",
+      "id": "cw_0092",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Au marché (exercice 092)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-05T21:07:00.186Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0091",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T18:30:00Z",
+      "description": "Les enfants chantent une chanson. Marie lit un livre chaque soir.",
+      "dueDate": {
+        "day": 10,
+        "month": 9,
+        "year": 2026
+      },
+      "id": "cw_0091",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "La routine du matin (exercice 091)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-05T20:30:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0090",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T17:53:00Z",
+      "description": "Nous allons au marché demain. Marie lit un livre chaque soir.",
+      "id": "cw_0090",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les articles définis (exercice 090)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-05T19:53:00.062480618Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0089",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T17:16:00Z",
+      "description": "Marie lit un livre chaque soir. Le chat dort près de la fenêtre.",
+      "id": "cw_0089",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Le passé composé (exercice 089)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-05T19:16:00.946Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0088",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T16:39:00Z",
+      "description": "Nous allons au marché demain. La boulangerie ouvre à sept heures.",
+      "id": "cw_0088",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les loisirs créatifs (exercice 088)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-05T18:39:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0087",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T16:02:00Z",
+      "description": "Il fait beau en France. Le restaurant est très grand.",
+      "id": "cw_0087",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Le week-end en famille (exercice 087)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-05T18:02:00.665631744Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0086",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T15:25:00Z",
+      "description": "La boulangerie ouvre à sept heures. Il fait beau en France.",
+      "dueDate": {
+        "day": 5,
+        "month": 9,
+        "year": 2026
+      },
+      "id": "cw_0086",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "À la cantine (exercice 086)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-05T17:25:00.943Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0085",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T14:48:00Z",
+      "description": "Le restaurant est très grand. Les enfants chantent une chanson.",
+      "id": "cw_0085",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les transports en ville (exercice 085)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-05T16:48:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0084",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T14:11:00Z",
+      "description": "Un bon vin blanc accompagne le repas. J’ai rendez-vous à onze heures.",
+      "id": "cw_0084",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "La météo de la semaine (exercice 084)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-05T16:11:00.184455608Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0083",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T13:34:00Z",
+      "description": "Le restaurant est très grand. Un bon vin blanc accompagne le repas.",
+      "id": "cw_0083",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Le futur simple (exercice 083)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-05T15:34:00.916Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0082",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T12:57:00Z",
+      "description": "Un bon vin blanc accompagne le repas. Marie lit un livre chaque soir.",
+      "id": "cw_0082",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les adjectifs de couleur (exercice 082)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-05T14:57:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0081",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T12:20:00Z",
+      "description": "La boulangerie ouvre à sept heures. Le chat dort près de la fenêtre.",
+      "dueDate": {
+        "day": 27,
+        "month": 9,
+        "year": 2026
+      },
+      "id": "cw_0081",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Au marché (exercice 081)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-05T14:20:00.104980915Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0080",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T11:43:00Z",
+      "description": "Nous allons au marché demain. J’ai rendez-vous à onze heures.",
+      "id": "cw_0080",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "La routine du matin (exercice 080)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-05T13:43:00.085Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0079",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T11:06:00Z",
+      "description": "Marie lit un livre chaque soir. Le chat dort près de la fenêtre.",
+      "id": "cw_0079",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les articles définis (exercice 079)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-05T13:06:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0078",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T10:29:00Z",
+      "description": "Le chat dort près de la fenêtre. Les enfants chantent une chanson.",
+      "id": "cw_0078",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Le passé composé (exercice 078)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-05T12:29:00.131118590Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0077",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T09:52:00Z",
+      "description": "Il fait beau en France. J’ai rendez-vous à onze heures.",
+      "id": "cw_0077",
+      "materials": [
+        {
+          "link": {
+            "title": "E76",
+            "url": "https://example.test/r76"
+          }
+        }
+      ],
+      "state": "PUBLISHED",
+      "title": "Les loisirs créatifs (exercice 077)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-05T11:52:00.568Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0076",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T09:15:00Z",
+      "description": "Un bon vin blanc accompagne le repas. Les enfants chantent une chanson.",
+      "dueDate": {
+        "day": 22,
+        "month": 9,
+        "year": 2026
+      },
+      "id": "cw_0076",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Le week-end en famille (exercice 076)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-05T11:15:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0075",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T08:38:00Z",
+      "description": "Nous allons au marché demain. Il fait beau en France.",
+      "id": "cw_0075",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "À la cantine (exercice 075)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-05T10:38:00.460775620Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0074",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T08:01:00Z",
+      "description": "Les enfants chantent une chanson. J’ai rendez-vous à onze heures.",
+      "id": "cw_0074",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les transports en ville (exercice 074)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-05T10:01:00.447Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0073",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T07:24:00Z",
+      "description": "Un bon vin blanc accompagne le repas. Il fait beau en France.",
+      "id": "cw_0073",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "La météo de la semaine (exercice 073)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-05T09:24:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0072",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T06:47:00Z",
+      "description": "Le chat dort près de la fenêtre. Le restaurant est très grand.",
+      "id": "cw_0072",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Le futur simple (exercice 072)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-05T08:47:00.876304818Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0071",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T06:10:00Z",
+      "description": "Nous allons au marché demain. J’ai rendez-vous à onze heures.",
+      "dueDate": {
+        "day": 17,
+        "month": 9,
+        "year": 2026
+      },
+      "id": "cw_0071",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les adjectifs de couleur (exercice 071)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-05T08:10:00.645Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0070",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T05:33:00Z",
+      "description": "Marie lit un livre chaque soir. J’ai rendez-vous à onze heures.",
+      "id": "cw_0070",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Au marché (exercice 070)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-05T07:33:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0069",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T04:56:00Z",
+      "description": "Il fait beau en France. Nous allons au marché demain.",
+      "id": "cw_0069",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "La routine du matin (exercice 069)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-05T06:56:00.554815095Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0068",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T04:19:00Z",
+      "description": "Le restaurant est très grand. Marie lit un livre chaque soir.",
+      "id": "cw_0068",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les articles définis (exercice 068)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-05T06:19:00.241Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0067",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T03:42:00Z",
+      "description": "Il fait beau en France. Les enfants chantent une chanson.",
+      "id": "cw_0067",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Le passé composé (exercice 067)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-05T05:42:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0066",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T03:05:00Z",
+      "description": "La boulangerie ouvre à sept heures. Le restaurant est très grand.",
+      "dueDate": {
+        "day": 12,
+        "month": 9,
+        "year": 2026
+      },
+      "id": "cw_0066",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les loisirs créatifs (exercice 066)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-05T05:05:00.399749928Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0065",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T02:28:00Z",
+      "description": "J’ai rendez-vous à onze heures. Il fait beau en France.",
+      "id": "cw_0065",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Le week-end en famille (exercice 065)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-05T04:28:00.950Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0064",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T01:51:00Z",
+      "description": "Marie lit un livre chaque soir. Nous allons au marché demain.",
+      "id": "cw_0064",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "À la cantine (exercice 064)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-05T03:51:00Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0063",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T01:14:00Z",
+      "description": "Il fait beau en France. Un bon vin blanc accompagne le repas.",
+      "id": "cw_0063",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Les transports en ville (exercice 063)",
+      "topicId": "topic_comprehension",
+      "updateTime": "2026-08-05T03:14:00.260903187Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0062",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T00:37:00Z",
+      "description": "Nous allons au marché demain. Marie lit un livre chaque soir.",
+      "id": "cw_0062",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "La météo de la semaine (exercice 062)",
+      "topicId": "topic_grammaire",
+      "updateTime": "2026-08-05T02:37:00.868Z"
+    },
+    {
+      "alternateLink": "https://classroom.google.com/c/cours_fr_a2_g3/a/cw_0061",
+      "courseId": "cours_fr_a2_g3",
+      "creationTime": "2026-08-05T00:00:00Z",
+      "description": "Un bon vin blanc accompagne le repas. Le restaurant est très grand.",
+      "dueDate": {
+        "day": 7,
+        "month": 9,
+        "year": 2026
+      },
+      "id": "cw_0061",
+      "materials": [],
+      "state": "PUBLISHED",
+      "title": "Le futur simple (exercice 061)",
+      "topicId": "topic_vocabulaire",
+      "updateTime": "2026-08-05T02:00:00Z"
+    }
+  ],
+  "nextPageToken": "page2"
+}
