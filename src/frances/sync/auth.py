@@ -43,10 +43,8 @@ def build_credentials(env: Mapping[str, str]) -> Credentials:
     """
     for var in _REQUIRED_VARS:
         if not env.get(var):
-            raise ConfigError(
-                f"Falta la variable de entorno {var} para autenticarse con Google"
-            )
-    return Credentials(
+            raise ConfigError(f"Falta la variable de entorno {var} para autenticarse con Google")
+    return Credentials(  # type: ignore[no-untyped-call]
         None,
         refresh_token=env["GOOGLE_REFRESH_TOKEN"],
         client_id=env["GOOGLE_CLIENT_ID"],
@@ -58,9 +56,7 @@ def build_credentials(env: Mapping[str, str]) -> Credentials:
 
 def _run_check() -> None:
     try:
-        api = GoogleApi(
-            build_credentials(os.environ), "https://classroom.googleapis.com/v1"
-        )
+        api = GoogleApi(build_credentials(os.environ), "https://classroom.googleapis.com/v1")
         api.refresh()
         api.get_json("courses", {"pageSize": 1})
     except AuthError as exc:
