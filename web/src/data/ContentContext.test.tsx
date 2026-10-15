@@ -50,7 +50,7 @@ test('restoreKey with stored key goes ready without passphrase', async () => {
 });
 
 test('remember=false keeps key out of IndexedDB', async () => {
-  const { manifest, files } = await makeTestBundle({
+  const { files } = await makeTestBundle({
     passphrase: PASS,
     index: makeIndex(),
     iterations: 1000,
@@ -68,7 +68,7 @@ test('remember=false keeps key out of IndexedDB', async () => {
 });
 
 test('lock clears key and returns to locked', async () => {
-  const { manifest, files } = await makeTestBundle({
+  const { files } = await makeTestBundle({
     passphrase: PASS,
     index: makeIndex(),
     iterations: 1000,
