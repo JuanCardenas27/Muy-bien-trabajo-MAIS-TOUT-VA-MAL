@@ -346,11 +346,8 @@ dependencies = [
     { name = "google-auth" },
     { name = "httpx" },
     { name = "pydantic" },
-<<<<<<< HEAD
     { name = "pyyaml" },
-=======
     { name = "pytesseract" },
->>>>>>> origin/main
     { name = "typer" },
     { name = "tzdata" },
 ]
@@ -375,11 +372,8 @@ requires-dist = [
     { name = "google-auth", specifier = "==2.62.0" },
     { name = "httpx", specifier = "==0.28.1" },
     { name = "pydantic", specifier = "==2.14.1" },
-<<<<<<< HEAD
     { name = "pyyaml", specifier = "==6.0.3" },
-=======
     { name = "pytesseract", specifier = "==0.3.13" },
->>>>>>> origin/main
     { name = "typer", specifier = "==0.27.3" },
     { name = "tzdata", specifier = "==2026.5" },
 ]
