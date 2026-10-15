@@ -81,14 +81,9 @@ def parse_course(raw: dict[str, Any]) -> Course:
 def parse_item(raw: dict[str, Any], kind: ItemKind, course_id: str) -> Item:
     """Convierte el dict crudo de un stream en un :class:`Item`."""
     title: str | None = None if kind == "announcement" else raw.get("title")
-    if kind == "announcement":
-        text = str(raw.get("text", ""))
-    else:
-        text = str(raw.get("description", ""))
+    text = str(raw.get("text", "")) if kind == "announcement" else str(raw.get("description", ""))
     materials = raw.get("materials", [])
-    keys = sorted(
-        _material_key(m) for m in materials if isinstance(m, Mapping)
-    )
+    keys = sorted(_material_key(m) for m in materials if isinstance(m, Mapping))
     return Item(
         id=item_id(kind, str(raw["id"])),
         course_id=course_id,
@@ -131,9 +126,7 @@ class ClassroomClient:
                 name=str(raw["name"]),
                 update_time=norm_ts(str(raw["updateTime"])),
             )
-            for raw in self._api.paginate(
-                f"courses/{course_id}/topics", {"pageSize": 100}, "topic"
-            )
+            for raw in self._api.paginate(f"courses/{course_id}/topics", {"pageSize": 100}, "topic")
         ]
 
     def iter_stream(self, course_id: str, stream: ItemKind) -> Iterator[dict[str, Any]]:

@@ -4,20 +4,20 @@ import json
 import sys
 from pathlib import Path
 
-import respx
 import pytest
+import respx
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "fixtures"))
 
-from google_mock import FRENCH_COURSE_ID, install_google_mocks  # noqa: E402
+from google_mock import FRENCH_COURSE_ID, install_google_mocks
 
-from frances.models.ids import item_id  # noqa: E402
-from frances.sync.classroom import (  # noqa: E402
+from frances.models.ids import item_id
+from frances.sync.classroom import (
     ClassroomClient,
     parse_course,
     parse_item,
 )
-from frances.sync.google_http import GoogleApi  # noqa: E402
+from frances.sync.google_http import GoogleApi
 
 pytestmark = pytest.mark.respx(assert_all_called=False)
 
@@ -122,9 +122,7 @@ def test_due_at_with_time_and_default_bogota() -> None:
 def test_content_hash_stable_under_materials_order() -> None:
     a = parse_item({**BASE_RAW, "materials": [M_PDF, M_LINK]}, "coursework", FR)
     b = parse_item({**BASE_RAW, "materials": [M_LINK, M_PDF]}, "coursework", FR)
-    c = parse_item(
-        {**BASE_RAW, "title": "Autre", "materials": [M_PDF, M_LINK]}, "coursework", FR
-    )
+    c = parse_item({**BASE_RAW, "title": "Autre", "materials": [M_PDF, M_LINK]}, "coursework", FR)
     assert a.content_hash == b.content_hash != c.content_hash
 
 
