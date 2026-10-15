@@ -1,24 +1,18 @@
 """Generador determinista de fixtures sintéticos (Task FND-05).
 
-Todo el contenido es inventado: ningún nombre, archivo o texto real del
-Classroom (Global Constraints). Se usa así::
-
-    python tests/fixtures/make_fixtures.py [OUT_DIR]
-
-Sin argumentos escribe en el directorio ``tests/fixtures`` que contiene a
-este script. La salida es idempotente: correr dos veces produce bytes
-idénticos (los PDF usan ``invariant=1`` y Pillow no mete timestamps).
+Todo el contenido es inventado: nada real del Classroom. Uso:
+``python tests/fixtures/make_fixtures.py [OUT_DIR]`` (idempotente).
 """
 
 import hashlib
 import json
 import random
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 SEED = 20261014
-BASE_TIME = datetime(2026, 8, 3, 13, 0, 0, tzinfo=timezone.utc)
+BASE_TIME = datetime(2026, 8, 3, 13, 0, 0, tzinfo=UTC)
 
 FRENCH_COURSE_ID = "cours_fr_a2_g3"
 
@@ -29,14 +23,7 @@ DOC_FILE_ID = "drive_doc_texte"
 IMAGE_FILE_ID = "drive_image_phrase"
 MISSING_FILE_ID = "drive_missing_pdf"
 
-DRIVE_FILE_IDS = (
-    PDF_FILE_ID,
-    SLIDES_FILE_ID,
-    LOCKED_FILE_ID,
-    DOC_FILE_ID,
-    IMAGE_FILE_ID,
-)
-
+DRIVE_FILE_IDS = (PDF_FILE_ID, SLIDES_FILE_ID, LOCKED_FILE_ID, DOC_FILE_ID, IMAGE_FILE_ID)
 SCENARIOS = ("v1", "v2", "deleted")
 
 FR_TITLES = [
@@ -51,53 +38,46 @@ FR_TITLES = [
     "À la cantine",
     "Le week-end en famille",
     "Les loisirs créatifs",
-    "La maison et les pièces",
 ]
 
 FR_SENTENCES = [
     "Les enfants chantent une chanson.",
     "Il fait beau en France.",
-    "J’ai rendez-vous à onze heures.",
+    "J’ai rendez-vous à onze heures.",  # noqa: RUF001
     "Le restaurant est très grand.",
     "Un bon vin blanc accompagne le repas.",
     "Nous allons au marché demain.",
     "Le chat dort près de la fenêtre.",
     "Marie lit un livre chaque soir.",
-    "Ils jouent au ballon dans le jardin.",
     "La boulangerie ouvre à sept heures.",
-    "Tu prends un café avec tes amis.",
-    "Nous visitons le musée samedi.",
 ]
 
 VOCAB_LINES = [
     "Vocabulaire — la rentrée (inventé)",
-    "l’école — la escuela",
-    "« Bonjour ! » — saludo con alegría",
-    "Qu’est-ce que c’est ? — pregunta",
+    "l’école — la escuela",  # noqa: RUF001
+    "« Bonjour ! » — saludo con alegría",  # noqa: RUF001
+    "Qu’est-ce que c’est ? — pregunta",  # noqa: RUF001
     "le cahier — el cuaderno",
     "la trousse — el estuche",
-    "« Merci beaucoup ! » — agradecimiento",
-    "l’ami fidèle — el amigo fiel",
+    "« Merci beaucoup ! » — agradecimiento",  # noqa: RUF001
+    "l’ami fidèle — el amigo fiel",  # noqa: RUF001
     "le tableau noir — el tablero",
-    "« À demain ! » — despedida",
+    "« À demain ! » — despedida",  # noqa: RUF001
     "la récréation — el recreo",
     "le stylo bleu — el bolígrafo azul",
-    "« S’il vous plaît ? » — petición amable",
+    "« S’il vous plaît ? » — petición amable",  # noqa: RUF001
     "le devoir du jour — la tarea del día",
 ]
 
 MIXED_LINES = [
     "Ficha mixta — español y francés (inventada)",
-    "Hoy aprendemos: l’école y la maison.",
-    "Repite en voz alta : « Bonjour ! »",
+    "Hoy aprendemos: l’école y la maison.",  # noqa: RUF001
+    "Repite en voz alta : « Bonjour ! »",  # noqa: RUF001
     "La frase del día: Les enfants chantent une chanson.",
     "Mañana practicamos le passé composé.",
-    "Recuerda: « Merci beaucoup ! » siempre ayuda.",
-    "Escucha y repite : Qu’est-ce que c’est ?",
-    "Para la casa: escribe trois phrases nuevas.",
+    "Recuerda: « Merci beaucoup ! » siempre ayuda.",  # noqa: RUF001
+    "Escucha y repite : Qu’est-ce que c’est ?",  # noqa: RUF001
 ]
-
-PHRASE_IMAGE_TEXT = "Les enfants chantent une chanson."
 
 
 def _font_path() -> Path:
@@ -114,14 +94,14 @@ def _fmt_ts(moment: datetime, digits: int, rng: random.Random) -> str:
     base = moment.strftime("%Y-%m-%dT%H:%M:%S")
     if digits == 0:
         return base + "Z"
-    width = {3: 3, 9: 9}[digits]
-    return f"{base}.{rng.randint(0, 10**width - 1):0{width}d}Z"
+    return f"{base}.{rng.randint(0, 10**digits - 1):0{digits}d}Z"
 
 
 def _write_json(path: Path, payload: object) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    text = json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
-    path.write_text(text, encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     return path
 
 
@@ -129,139 +109,106 @@ def _drive_file_entry(file_id: str, title: str) -> dict[str, object]:
     return {"driveFile": {"driveFile": {"id": file_id, "title": title}, "shareMode": "VIEW"}}
 
 
+def _course(cid: str, name: str, state: str, age: int, rng: random.Random) -> dict[str, object]:
+    return {
+        "id": cid,
+        "name": name,
+        "section": "Groupe 3 (inventé)" if cid == FRENCH_COURSE_ID else None,
+        "courseState": state,
+        "alternateLink": f"https://classroom.google.com/c/{cid}",
+        "creationTime": _fmt_ts(BASE_TIME - timedelta(days=age), 0, rng),
+        "updateTime": _fmt_ts(BASE_TIME, 3, rng),
+    }
+
+
 def _build_classroom(rng: random.Random) -> dict[str, object]:
     courses = [
-        {
-            "id": FRENCH_COURSE_ID,
-            "name": "Français A2 – Groupe 3",
-            "section": "Groupe 3 (inventé)",
-            "courseState": "ACTIVE",
-            "alternateLink": f"https://classroom.google.com/c/{FRENCH_COURSE_ID}",
-            "creationTime": _fmt_ts(BASE_TIME - timedelta(days=30), 0, rng),
-            "updateTime": _fmt_ts(BASE_TIME, 3, rng),
-        },
-        {
-            "id": "cours_calc_1",
-            "name": "Cálculo Diferencial",
-            "section": None,
-            "courseState": "ACTIVE",
-            "alternateLink": "https://classroom.google.com/c/cours_calc_1",
-            "creationTime": _fmt_ts(BASE_TIME - timedelta(days=40), 0, rng),
-            "updateTime": _fmt_ts(BASE_TIME - timedelta(days=1), 9, rng),
-        },
-        {
-            "id": "cours_fr_a1_2025",
-            "name": "Français A1 – 2025",
-            "section": None,
-            "courseState": "ARCHIVED",
-            "alternateLink": "https://classroom.google.com/c/cours_fr_a1_2025",
-            "creationTime": _fmt_ts(BASE_TIME - timedelta(days=400), 0, rng),
-            "updateTime": _fmt_ts(BASE_TIME - timedelta(days=200), 3, rng),
-        },
+        _course(FRENCH_COURSE_ID, "Français A2 – Groupe 3", "ACTIVE", 30, rng),  # noqa: RUF001
+        _course("cours_calc_1", "Cálculo Diferencial", "ACTIVE", 40, rng),
+        _course("cours_fr_a1_2025", "Français A1 – 2025", "ARCHIVED", 400, rng),  # noqa: RUF001
     ]
     topics = [
         {
             "courseId": FRENCH_COURSE_ID,
-            "topicId": topic_id,
+            "topicId": tid,
             "name": name,
-            "updateTime": _fmt_ts(BASE_TIME + timedelta(hours=i), i % 3 and 9 or 0, rng),
+            "updateTime": _fmt_ts(BASE_TIME + timedelta(hours=i), (0, 3, 9)[i % 3], rng),
         }
-        for i, (topic_id, name) in enumerate(
-            [
+        for i, (tid, name) in enumerate(
+            (
                 ("topic_vocabulaire", "Vocabulaire"),
                 ("topic_grammaire", "Grammaire"),
                 ("topic_comprehension", "Compréhension orale"),
-            ]
+            )
         )
     ]
-
+    # Cada archivo de drive/ queda adjunto a al menos una publicación (R-29).
+    attach = {
+        0: (PDF_FILE_ID, "lesson-text.pdf"),
+        4: (SLIDES_FILE_ID, "devoir-slides"),
+        9: (DOC_FILE_ID, "texte-lecture"),
+        19: (IMAGE_FILE_ID, "phrase.png"),
+        29: (MISSING_FILE_ID, "ancien-devoir.pdf"),
+    }
     coursework: list[dict[str, object]] = []
     for i in range(120):
         moment = BASE_TIME + timedelta(minutes=37 * i)
-        digits = (0, 3, 9)[i % 3]
-        title = f"{FR_TITLES[i % len(FR_TITLES)]} (exercice {i + 1:03d})"
-        description = " ".join(rng.sample(FR_SENTENCES, k=2))
-        materials: list[dict[str, object]] = []
-        if i == 0:
-            materials.append(_drive_file_entry(PDF_FILE_ID, "lesson-text.pdf"))
-        elif i == 4:
-            materials.append(_drive_file_entry(SLIDES_FILE_ID, "devoir-slides"))
-        elif i == 9:
-            materials.append(_drive_file_entry(DOC_FILE_ID, "texte-lecture"))
-        elif i == 19:
-            materials.append(_drive_file_entry(IMAGE_FILE_ID, "phrase.png"))
-        elif i == 29:
-            materials.append(_drive_file_entry(MISSING_FILE_ID, "ancien-devoir.pdf"))
-        elif i % 17 == 0:
-            materials.append(
-                {
-                    "link": {
-                        "url": f"https://example.test/ressource-{i}",
-                        "title": f"Ressource {i}",
-                    }
-                }
-            )
+        materials: list[dict[str, object]] = [_drive_file_entry(*attach[i])] if i in attach else []
+        if i % 17 == 8:
+            materials.append({"link": {"url": f"https://example.test/r{i}", "title": f"E{i}"}})
         item: dict[str, object] = {
             "courseId": FRENCH_COURSE_ID,
             "id": f"cw_{i + 1:04d}",
-            "title": title,
-            "description": description,
+            "title": f"{FR_TITLES[i % len(FR_TITLES)]} (exercice {i + 1:03d})",
+            "description": " ".join(rng.sample(FR_SENTENCES, k=2)),
             "materials": materials,
             "topicId": topics[i % len(topics)]["topicId"],
             "state": "PUBLISHED",
             "alternateLink": f"https://classroom.google.com/c/{FRENCH_COURSE_ID}/a/cw_{i + 1:04d}",
             "creationTime": _fmt_ts(moment - timedelta(hours=2), 0, rng),
-            "updateTime": _fmt_ts(moment, digits, rng),
+            "updateTime": _fmt_ts(moment, (0, 3, 9)[i % 3], rng),
         }
         if i % 5 == 0:
             item["dueDate"] = {"year": 2026, "month": 9, "day": 1 + (i % 27)}
         coursework.append(item)
-    coursework.sort(key=lambda c: str(c["updateTime"]), reverse=False)
-
-    material_defs = [
-        ("m_0001", "Consignes générales (inventées)", [_drive_file_entry(PDF_FILE_ID, "lesson-text.pdf")]),
-        ("m_0002", "Diaporama du devoir (inventé)", [_drive_file_entry(SLIDES_FILE_ID, "devoir-slides")]),
-        ("m_0003", "Document verrouillé (inventé)", [_drive_file_entry(LOCKED_FILE_ID, "verrouille")]),
-        ("m_0004", "Lecture du mardi (inventée)", [_drive_file_entry(DOC_FILE_ID, "texte-lecture")]),
-        ("m_0005", "Image de la phrase (inventée)", [_drive_file_entry(IMAGE_FILE_ID, "phrase.png")]),
-        ("m_0006", "Rappel sans pièce jointe (inventé)", []),
-        ("m_0007", "Lien externe (inventé)", [{"link": {"url": "https://example.test/guide", "title": "Guide"}}]),
-        ("m_0008", "Ancien polycopié (inventé)", [_drive_file_entry(PDF_FILE_ID, "lesson-text.pdf")]),
+    defs = [
+        ("m_0001", "Consignes générales (inventées)", [(PDF_FILE_ID, "lesson-text.pdf")]),
+        ("m_0002", "Diaporama du devoir (inventé)", [(SLIDES_FILE_ID, "devoir-slides")]),
+        ("m_0003", "Document verrouillé (inventé)", [(LOCKED_FILE_ID, "verrouille")]),
+        ("m_0004", "Lecture du mardi (inventée)", [(DOC_FILE_ID, "texte-lecture")]),
+        ("m_0005", "Image de la phrase (inventée)", [(IMAGE_FILE_ID, "phrase.png")]),
+        ("m_0006", "Rappel sin adjunto (inventé)", []),
+        ("m_0007", "Lien externe (inventé)", []),
+        ("m_0008", "Ancien polycopié (inventé)", [(PDF_FILE_ID, "lesson-text.pdf")]),
     ]
-    materials_out: list[dict[str, object]] = []
-    for i, (mid, title, mats) in enumerate(material_defs):
-        moment = BASE_TIME + timedelta(hours=3 * i + 1)
-        materials_out.append(
-            {
-                "courseId": FRENCH_COURSE_ID,
-                "id": mid,
-                "title": title,
-                "description": rng.choice(FR_SENTENCES),
-                "materials": mats,
-                "topicId": topics[i % len(topics)]["topicId"],
-                "state": "PUBLISHED",
-                "alternateLink": f"https://classroom.google.com/c/{FRENCH_COURSE_ID}/a/{mid}",
-                "creationTime": _fmt_ts(moment - timedelta(hours=1), 0, rng),
-                "updateTime": _fmt_ts(moment, (0, 3, 9)[i % 3], rng),
-            }
+
+    def mat(i: int, mid: str, title: str, att: list[tuple[str, str]]) -> dict[str, object]:
+        mats = [_drive_file_entry(*a) for a in att]
+        if mid == "m_0007":
+            mats = [{"link": {"url": "https://example.test/guide", "title": "Guide"}}]
+        return _stream_item(
+            mid,
+            rng,
+            BASE_TIME + timedelta(hours=3 * i + 1),
+            (0, 3, 9)[i % 3],
+            title=title,
+            description=rng.choice(FR_SENTENCES),
+            materials=mats,
+            topicId=topics[i % len(topics)]["topicId"],
         )
 
-    announcements: list[dict[str, object]] = []
-    for i in range(6):
-        moment = BASE_TIME + timedelta(hours=5 * i + 2)
-        mats = [_drive_file_entry(DOC_FILE_ID, "texte-lecture")] if i == 0 else []
-        announcements.append(
-            {
-                "courseId": FRENCH_COURSE_ID,
-                "id": f"a_{i + 1:04d}",
-                "text": rng.choice(FR_SENTENCES),
-                "materials": mats,
-                "state": "PUBLISHED",
-                "alternateLink": f"https://classroom.google.com/c/{FRENCH_COURSE_ID}/a/a_{i + 1:04d}",
-                "creationTime": _fmt_ts(moment - timedelta(minutes=30), 0, rng),
-                "updateTime": _fmt_ts(moment, (9, 0, 3)[i % 3], rng),
-            }
+    def ann(i: int) -> dict[str, object]:
+        return _stream_item(
+            f"a_{i + 1:04d}",
+            rng,
+            BASE_TIME + timedelta(hours=5 * i + 2),
+            (9, 0, 3)[i % 3],
+            text=rng.choice(FR_SENTENCES),
+            materials=([_drive_file_entry(DOC_FILE_ID, "texte-lecture")] if i == 0 else []),
         )
+
+    materials_out = [mat(i, mid, title, att) for i, (mid, title, att) in enumerate(defs)]
+    announcements = [ann(i) for i in range(6)]
     return {
         "courses": courses,
         "topics": topics,
@@ -271,129 +218,90 @@ def _build_classroom(rng: random.Random) -> dict[str, object]:
     }
 
 
+def _stream_item(
+    iid: str, rng: random.Random, moment: datetime, digits: int, **extra: object
+) -> dict[str, object]:
+    return {
+        "courseId": FRENCH_COURSE_ID,
+        "id": iid,
+        "state": "PUBLISHED",
+        "alternateLink": f"https://classroom.google.com/c/{FRENCH_COURSE_ID}/a/{iid}",
+        "creationTime": _fmt_ts(moment - timedelta(hours=1), 0, rng),
+        "updateTime": _fmt_ts(moment, digits, rng),
+        **extra,
+    }
+
+
 def _write_scenario(out_dir: Path, name: str, data: dict[str, object]) -> list[Path]:
     sdir = out_dir / "classroom" / name
-    coursework = [dict(item) for item in data["coursework"]]  # type: ignore[union-attr]
-    coursework.sort(key=lambda c: str(c["updateTime"]), reverse=True)
+    coursework = sorted(data["coursework"], key=lambda c: str(c["updateTime"]), reverse=True)  # type: ignore[union-attr]
     half = len(coursework) // 2
-    page1 = {"courseWork": coursework[:half], "nextPageToken": "page2"}
-    page2 = {"courseWork": coursework[half:]}
     materials = list(data["materials"])  # type: ignore[union-attr]
-    if name == "deleted":
-        materials = materials[:-1]
+    materials = materials[:-1] if name == "deleted" else materials
     return [
         _write_json(sdir / "courses.json", {"courses": data["courses"]}),
         _write_json(sdir / "topics.json", {"topic": data["topics"]}),
-        _write_json(sdir / "courseWork.page1.json", page1),
-        _write_json(sdir / "courseWork.page2.json", page2),
+        _write_json(
+            sdir / "courseWork.page1.json",
+            {"courseWork": coursework[:half], "nextPageToken": "page2"},
+        ),
+        _write_json(sdir / "courseWork.page2.json", {"courseWork": coursework[half:]}),
         _write_json(sdir / "courseWorkMaterials.json", {"courseWorkMaterial": materials}),
         _write_json(sdir / "announcements.json", {"announcements": data["announcements"]}),
     ]
 
 
+def _export_links(file_id: str, *mimes: str) -> dict[str, str]:
+    base = "https://www.googleapis.com/drive/v3"
+    return {m: f"{base}/files/{file_id}/export?mimeType={m}" for m in mimes}
+
+
+_MIME_SHORT = {
+    "pdf": "application/pdf",
+    "png": "image/png",
+    "doc": "application/vnd.google-apps.document",
+    "slides": "application/vnd.google-apps.presentation",
+}
+_EXPORT_SHORT = {"t": "text/plain", "p": "application/pdf"}
+
+# (id, nombre, tipo, versión, horas_mod, dígitos_mod, descargable, exportaciones)
+_DRIVE_SPECS = [
+    (PDF_FILE_ID, "lesson-text.pdf", "pdf", "10", 2, 3, True, ()),
+    (SLIDES_FILE_ID, "devoir-slides", "slides", "4", 1, 9, True, ("t", "p")),
+    (LOCKED_FILE_ID, "verrouille", "doc", "2", 0, 0, False, ("t",)),
+    (DOC_FILE_ID, "texte-lecture", "doc", "6", 3, 3, True, ("t",)),
+    (IMAGE_FILE_ID, "phrase.png", "png", "3", 0, 9, True, ()),
+]
+
+
 def _build_drive(rng: random.Random, out_dir: Path, pdf_size: int, pdf_md5: str) -> list[Path]:
     ddir = out_dir / "drive"
     moment = BASE_TIME + timedelta(days=1)
-    metas: list[tuple[str, dict[str, object]]] = [
-        (
-            PDF_FILE_ID,
-            {
-                "id": PDF_FILE_ID,
-                "name": "lesson-text.pdf",
-                "mimeType": "application/pdf",
-                "version": "10",
-                "size": str(pdf_size),
-                "md5Checksum": pdf_md5,
-                "capabilities": {"canDownload": True},
-                "createdTime": _fmt_ts(moment, 0, rng),
-                "modifiedTime": _fmt_ts(moment + timedelta(hours=2), 3, rng),
-            },
-        ),
-        (
-            SLIDES_FILE_ID,
-            {
-                "id": SLIDES_FILE_ID,
-                "name": "devoir-slides",
-                "mimeType": "application/vnd.google-apps.presentation",
-                "version": "4",
-                "capabilities": {"canDownload": True},
-                "exportLinks": {
-                    "text/plain": (
-                        f"https://www.googleapis.com/drive/v3/files/{SLIDES_FILE_ID}"
-                        "/export?mimeType=text/plain"
-                    ),
-                    "application/pdf": (
-                        f"https://www.googleapis.com/drive/v3/files/{SLIDES_FILE_ID}"
-                        "/export?mimeType=application/pdf"
-                    ),
-                },
-                "createdTime": _fmt_ts(moment, 0, rng),
-                "modifiedTime": _fmt_ts(moment + timedelta(hours=1), 9, rng),
-            },
-        ),
-        (
-            LOCKED_FILE_ID,
-            {
-                "id": LOCKED_FILE_ID,
-                "name": "verrouille",
-                "mimeType": "application/vnd.google-apps.document",
-                "version": "2",
-                "capabilities": {"canDownload": False},
-                "exportLinks": {
-                    "text/plain": (
-                        f"https://www.googleapis.com/drive/v3/files/{LOCKED_FILE_ID}"
-                        "/export?mimeType=text/plain"
-                    ),
-                },
-                "createdTime": _fmt_ts(moment, 0, rng),
-                "modifiedTime": _fmt_ts(moment, 0, rng),
-            },
-        ),
-        (
-            DOC_FILE_ID,
-            {
-                "id": DOC_FILE_ID,
-                "name": "texte-lecture",
-                "mimeType": "application/vnd.google-apps.document",
-                "version": "6",
-                "capabilities": {"canDownload": True},
-                "exportLinks": {
-                    "text/plain": (
-                        f"https://www.googleapis.com/drive/v3/files/{DOC_FILE_ID}"
-                        "/export?mimeType=text/plain"
-                    ),
-                },
-                "createdTime": _fmt_ts(moment, 3, rng),
-                "modifiedTime": _fmt_ts(moment + timedelta(hours=3), 3, rng),
-            },
-        ),
-        (
-            IMAGE_FILE_ID,
-            {
-                "id": IMAGE_FILE_ID,
-                "name": "phrase.png",
-                "mimeType": "image/png",
-                "version": "3",
-                "capabilities": {"canDownload": True},
-                "createdTime": _fmt_ts(moment, 0, rng),
-                "modifiedTime": _fmt_ts(moment, 9, rng),
-            },
-        ),
-    ]
-    written = [_write_json(ddir / "files" / f"{file_id}.json", meta) for file_id, meta in metas]
-    slides_txt = (
-        "Devoir — diaporama inventé\n"
-        "Les enfants chantent une chanson.\n"
-        "J’ai rendez-vous à onze heures.\n"
-    )
-    doc_txt = (
-        "Lecture inventée\n"
-        "Il fait beau en France.\n"
-        "Nous allons au marché demain.\n"
-        "Le restaurant est très grand.\n"
-    )
-    for file_id, text in ((SLIDES_FILE_ID, slides_txt), (DOC_FILE_ID, doc_txt)):
-        target = ddir / "export" / f"{file_id}.txt"
+    metas: list[tuple[str, dict[str, object]]] = []
+    for fid, name, short, version, hours, digits, can_dl, exps in _DRIVE_SPECS:
+        meta: dict[str, object] = {
+            "id": fid,
+            "name": name,
+            "mimeType": _MIME_SHORT[short],
+            "version": version,
+            "capabilities": {"canDownload": can_dl},
+            "createdTime": _fmt_ts(moment, 0, rng),
+            "modifiedTime": _fmt_ts(moment + timedelta(hours=hours), digits, rng),
+        }
+        if exps:
+            meta["exportLinks"] = _export_links(fid, *(_EXPORT_SHORT[e] for e in exps))
+        metas.append((fid, meta))
+    metas[0][1]["size"] = str(pdf_size)
+    metas[0][1]["md5Checksum"] = pdf_md5
+    written = [_write_json(ddir / "files" / f"{fid}.json", meta) for fid, meta in metas]
+    exports = {
+        SLIDES_FILE_ID: "Devoir — diaporama inventé\nLes enfants chantent une chanson.\n"
+        "J’ai rendez-vous à onze heures.\n",  # noqa: RUF001
+        DOC_FILE_ID: "Lecture inventée\nIl fait beau en France.\nNous allons au marché demain.\n"
+        "Le restaurant est très grand.\n",
+    }
+    for fid, text in exports.items():
+        target = ddir / "export" / f"{fid}.txt"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(text, encoding="utf-8")
         written.append(target)
@@ -401,7 +309,7 @@ def _build_drive(rng: random.Random, out_dir: Path, pdf_size: int, pdf_md5: str)
     return written
 
 
-def _build_text_pdf(path: Path, lines: list[str]) -> Path:
+def _build_text_pdf(path: Path, lines: list[str], title: str) -> Path:
     from reportlab.lib.pagesizes import A4
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
@@ -410,10 +318,9 @@ def _build_text_pdf(path: Path, lines: list[str]) -> Path:
     pdfmetrics.registerFont(TTFont("DejaVu", str(_font_path())))
     path.parent.mkdir(parents=True, exist_ok=True)
     doc = canvas.Canvas(str(path), pagesize=A4, invariant=1)
-    doc.setTitle("Fixture inventé — français")
+    doc.setTitle(title)
     doc.setAuthor("Frances Classroom (sintético)")
-    width, height = A4
-    text = doc.beginText(72, height - 72)
+    text = doc.beginText(72, A4[1] - 72)
     text.setFont("DejaVu", 12)
     text.setLeading(20)
     for line in lines:
@@ -435,12 +342,10 @@ def _build_scanned_pdf(source: Path, dest: Path) -> Path:
         out.setTitle("Fixture inventé — escaneado")
         out.setAuthor("Frances Classroom (sintético)")
         for page in doc:
-            bitmap = page.render(scale=150 / 72)
-            pil_image = bitmap.to_pil()
-            width_pt = pil_image.size[0] * 72 / 150
-            height_pt = pil_image.size[1] * 72 / 150
-            out.setPageSize((width_pt, height_pt))
-            out.drawImage(ImageReader(pil_image), 0, 0, width=width_pt, height=height_pt)
+            pil_image = page.render(scale=150 / 72).to_pil()
+            dims = (pil_image.size[0] * 72 / 150, pil_image.size[1] * 72 / 150)
+            out.setPageSize(dims)
+            out.drawImage(ImageReader(pil_image), 0, 0, width=dims[0], height=dims[1])
             out.showPage()
         out.save()
     finally:
@@ -452,10 +357,10 @@ def _build_phrase_image(path: Path) -> Path:
     from PIL import Image, ImageDraw, ImageFont
 
     font = ImageFont.truetype(str(_font_path()), 32)
-    canvas_size = (900, 120)
-    image = Image.new("RGB", canvas_size, "white")
-    draw = ImageDraw.Draw(image)
-    draw.text((24, 40), PHRASE_IMAGE_TEXT, font=font, fill="black")
+    image = Image.new("RGB", (900, 120), "white")
+    ImageDraw.Draw(image).text(
+        (24, 40), "Les enfants chantent une chanson.", font=font, fill="black"
+    )
     path.parent.mkdir(parents=True, exist_ok=True)
     image.save(str(path))
     return path
@@ -464,31 +369,30 @@ def _build_phrase_image(path: Path) -> Path:
 def generate(out_dir: Path) -> list[Path]:
     """Genera todos los fixtures bajo ``out_dir`` y devuelve las rutas escritas."""
     rng = random.Random(SEED)
-    written: list[Path] = []
     pdf_dir = out_dir / "pdf"
-    text_pdf = _build_text_pdf(pdf_dir / "lesson-text.pdf", VOCAB_LINES)
-    written.append(text_pdf)
-    written.append(_build_text_pdf(pdf_dir / "lesson-text.v2.pdf", [*VOCAB_LINES, "Le renard brun saute."]))
-    written.append(_build_text_pdf(pdf_dir / "mixed-es-fr.pdf", MIXED_LINES))
-    written.append(_build_scanned_pdf(text_pdf, pdf_dir / "lesson-scanned.pdf"))
-    written.append(_build_phrase_image(out_dir / "images" / "phrase.png"))
-
+    title = "Fixture inventé — français"
+    docs = [
+        ("lesson-text.pdf", VOCAB_LINES),
+        ("lesson-text.v2.pdf", [*VOCAB_LINES, "Le renard brun saute."]),
+        ("mixed-es-fr.pdf", MIXED_LINES),
+    ]
+    text_pdf, v2_pdf, mixed_pdf = [
+        _build_text_pdf(pdf_dir / name, lines, title) for name, lines in docs
+    ]
+    scanned_pdf = _build_scanned_pdf(text_pdf, pdf_dir / "lesson-scanned.pdf")
+    phrase_png = _build_phrase_image(out_dir / "images" / "phrase.png")
     pdf_bytes = text_pdf.read_bytes()
     data = _build_classroom(rng)
+    written = [text_pdf, v2_pdf, mixed_pdf, scanned_pdf, phrase_png]
     for scenario in SCENARIOS:
         written.extend(_write_scenario(out_dir, scenario, data))
-    # v2 usa la misma base pero el PDF fue reemplazado en Drive (Review Focus 2).
-    written.extend(
-        _build_drive(rng, out_dir, len(pdf_bytes), hashlib.md5(pdf_bytes).hexdigest())  # noqa: S324
-    )
+    written.extend(_build_drive(rng, out_dir, len(pdf_bytes), hashlib.md5(pdf_bytes).hexdigest()))
     return sorted(written)
 
 
 def main(argv: list[str]) -> int:
-    default = Path(__file__).resolve().parent
-    out = Path(argv[1]) if len(argv) > 1 else default
-    for path in generate(out):
-        print(path)
+    out = Path(argv[1]) if len(argv) > 1 else Path(__file__).resolve().parent
+    print(*(str(p) for p in generate(out)), sep="\n")
     return 0
 
 

@@ -8,11 +8,9 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
-
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "fixtures"))
 
-from make_fixtures import generate  # noqa: E402
+from make_fixtures import generate
 
 JSON_SUFFIXES = {".json", ".txt"}
 
@@ -73,9 +71,9 @@ def test_scenario_shape(fixtures_dir: Path) -> None:
     scenario = fixtures_dir / "classroom" / "v1"
     courses = json.loads((scenario / "courses.json").read_text(encoding="utf-8"))["courses"]
     assert [(c["name"], c["courseState"]) for c in courses] == [
-        ("Français A2 – Groupe 3", "ACTIVE"),
+        ("Français A2 – Groupe 3", "ACTIVE"),  # noqa: RUF001
         ("Cálculo Diferencial", "ACTIVE"),
-        ("Français A1 – 2025", "ARCHIVED"),
+        ("Français A1 – 2025", "ARCHIVED"),  # noqa: RUF001
     ]
     topics = json.loads((scenario / "topics.json").read_text(encoding="utf-8"))["topic"]
     assert len(topics) == 3
@@ -90,11 +88,11 @@ def test_scenario_shape(fixtures_dir: Path) -> None:
 
 def test_scanned_pdf_has_no_text_layer(fixtures_dir: Path) -> None:
     assert pdf_text(fixtures_dir / "pdf" / "lesson-scanned.pdf").strip() == ""
-    assert "l’école" in pdf_text(fixtures_dir / "pdf" / "lesson-text.pdf")
+    assert "l’école" in pdf_text(fixtures_dir / "pdf" / "lesson-text.pdf")  # noqa: RUF001
 
 
 def test_every_drive_file_is_attached(fixtures_dir: Path) -> None:
-    from google_mock import FRENCH_COURSE_ID  # noqa: PLC0415
+    from google_mock import FRENCH_COURSE_ID
 
     drive_ids = {
         p.stem for p in (fixtures_dir / "drive" / "files").glob("*.json") if p.stem != "DIRMARKER"
@@ -104,13 +102,22 @@ def test_every_drive_file_is_attached(fixtures_dir: Path) -> None:
     for scenario in ("v1", "v2", "deleted"):
         sdir = fixtures_dir / "classroom" / scenario
         payloads = [
-            (json.loads((sdir / "courseWork.page1.json").read_text(encoding="utf-8")), "courseWork"),
-            (json.loads((sdir / "courseWork.page2.json").read_text(encoding="utf-8")), "courseWork"),
+            (
+                json.loads((sdir / "courseWork.page1.json").read_text(encoding="utf-8")),
+                "courseWork",
+            ),
+            (
+                json.loads((sdir / "courseWork.page2.json").read_text(encoding="utf-8")),
+                "courseWork",
+            ),
             (
                 json.loads((sdir / "courseWorkMaterials.json").read_text(encoding="utf-8")),
                 "courseWorkMaterial",
             ),
-            (json.loads((sdir / "announcements.json").read_text(encoding="utf-8")), "announcements"),
+            (
+                json.loads((sdir / "announcements.json").read_text(encoding="utf-8")),
+                "announcements",
+            ),
         ]
         for payload, key in payloads:
             for item in payload[key]:

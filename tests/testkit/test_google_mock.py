@@ -11,7 +11,7 @@ import respx
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "fixtures"))
 
-from google_mock import (  # noqa: E402
+from google_mock import (
     CW_URL,
     FRENCH_COURSE_ID,
     LOCKED_FILE_ID,
@@ -104,6 +104,5 @@ def test_token_endpoint_mocked() -> None:
 
 
 def test_unknown_scenario_raises() -> None:
-    with respx.mock(assert_all_called=False) as router:
-        with pytest.raises(ValueError):
-            install_google_mocks(router, "nope")
+    with respx.mock(assert_all_called=False) as router, pytest.raises(ValueError):
+        install_google_mocks(router, "nope")

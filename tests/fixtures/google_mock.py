@@ -6,11 +6,11 @@ Todo el contenido servido sale de ``make_fixtures.py`` (nunca datos reales).
 
 import json
 import re
+from datetime import UTC
 from pathlib import Path
 
 import httpx
 import respx
-
 from make_fixtures import (
     DOC_FILE_ID,
     DRIVE_FILE_IDS,
@@ -49,7 +49,7 @@ SCENARIOS = ("v1", "v2", "deleted")
 
 
 def ts_sort_key(ts: str) -> str:
-    """Clave ordenable para `updateTime` con 0–9 decimales.
+    """Clave ordenable para `updateTime` con 0 a 9 decimales.
 
     Rellena la fracción a 9 dígitos y normaliza el offset a UTC. No depende
     de ``frances.timeutil`` (FND-05 solo depende de FND-01).
@@ -64,9 +64,9 @@ def ts_sort_key(ts: str) -> str:
     sign = 1 if zone[0] == "+" else -1
     digits = zone[1:].replace(":", "")
     offset_min = sign * (int(digits[:2]) * 60 + int(digits[2:4]))
-    from datetime import datetime, timedelta, timezone  # noqa: PLC0415
+    from datetime import datetime, timedelta
 
-    utc = datetime.strptime(base, "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc) - timedelta(
+    utc = datetime.strptime(base, "%Y-%m-%dT%H:%M:%S").replace(tzinfo=UTC) - timedelta(
         minutes=offset_min
     )
     return utc.strftime("%Y-%m-%dT%H:%M:%S") + f".{frac9}Z"
@@ -108,7 +108,7 @@ def install_google_mocks(router: respx.Router, scenario: str = "v1") -> None:
         if params.get("orderBy") == "updateTime desc":
             items.sort(key=lambda i: ts_sort_key(str(i["updateTime"])), reverse=True)
         if params.get("pageToken"):
-            return httpx.Response(200, json={"courseWork": items[len(page1["courseWork"]):]})  # type: ignore[union-attr]  # noqa: E501
+            return httpx.Response(200, json={"courseWork": items[len(page1["courseWork"]) :]})  # type: ignore[union-attr]
         first = items[: len(page1["courseWork"])]  # type: ignore[union-attr]
         token = page1.get("nextPageToken", "page2")  # type: ignore[union-attr]
         return httpx.Response(200, json={"courseWork": first, "nextPageToken": token})
@@ -120,7 +120,9 @@ def install_google_mocks(router: respx.Router, scenario: str = "v1") -> None:
         )
     )
     router.get(f"{CLASSROOM_BASE}/announcements").mock(
-        side_effect=lambda _: httpx.Response(200, json=_scenario_file(scenario, "announcements.json"))
+        side_effect=lambda _: httpx.Response(
+            200, json=_scenario_file(scenario, "announcements.json")
+        )
     )
     router.get(f"{CLASSROOM_BASE}/topics").mock(
         side_effect=lambda _: httpx.Response(200, json=_scenario_file(scenario, "topics.json"))
