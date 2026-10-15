@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import math
 import struct
 import wave
@@ -13,10 +14,12 @@ import typer
 from typer.testing import CliRunner
 
 import frances.audio.run as audio_run
-from frances.audio.azure_tts import CapExceeded
-from frances.audio.edge import EngineError
+from frances.audio.azure_tts import AzureTtsEngine, CapExceeded
+from frances.audio.edge import EdgeEngine, EngineError
 from frances.audio.run import EngineSet, run_audio
+from frances.audio.voices import load_voices
 from frances.db.store import Store
+from frances.errors import ConfigError
 from frances.models.audio import Voice
 from frances.stage import StageContext, make_context
 
@@ -177,7 +180,7 @@ def test_breaker_switches_to_azure_after_three_failures(
     assert report.counts["done"] == 9
     assert report.counts["azure_used"] == 9
     assert report.counts["left_pending"] == 0
-    assert len(edge.calls) == 9  # 3 clips × 3 intentos
+    assert len(edge.calls) == 9  # 3 clips x 3 intentos
     engines = dict(
         ctx_with_cards.store.conn.execute(
             "SELECT engine_used, count(*) FROM audio WHERE status = 'done' GROUP BY engine_used"
@@ -214,9 +217,7 @@ def test_cap_exceeded_leaves_rest_pending_and_partial(
     assert pending == [(0,)] * 11  # sin intento sumado
 
 
-def test_max_clips_respected(
-    ctx_with_cards: StageContext, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_max_clips_respected(ctx_with_cards: StageContext, monkeypatch: pytest.MonkeyPatch) -> None:
     _install_engines(monkeypatch, _write_sine)
     report = run_audio(ctx_with_cards, 2)
     assert report.status == "ok"  # cortar por max_clips no es partial
@@ -243,9 +244,7 @@ def test_failed_after_five_attempts(
     assert final.counts["done"] == 0 and final.counts["failed"] == 0
 
 
-def test_error_is_redacted(
-    ctx_with_cards: StageContext, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_error_is_redacted(ctx_with_cards: StageContext, monkeypatch: pytest.MonkeyPatch) -> None:
     _install_engines(monkeypatch, _fail_final)
     run_audio(ctx_with_cards, None)
     errors = ctx_with_cards.store.conn.execute(
@@ -271,26 +270,40 @@ def test_synthetic_voice_rendered_with_shift(
     monkeypatch.setattr("frances.audio.run.postprocess", spy)
     report = run_audio(ctx_with_cards, None)
     assert report.status == "ok"
-    shifted = [(src, dst, ratio) for src, dst, ratio in recorded if ratio != 1.0]
-    assert shifted and all(ratio == 1.08 for _src, _dst, ratio in shifted)
-    for _src, dst, _ratio in shifted:
+    voices_by_id = {voice.id: voice for voice in load_voices(ctx_with_cards.paths)}
+    for src, dst, ratio in recorded:
         voice_id = ctx_with_cards.store.conn.execute(
             "SELECT voice_id FROM audio WHERE cache_key = ?", (dst.stem,)
         ).fetchone()[0]
-        assert voice_id == "synth-teen-f"
-    plain = [(src.name, dst.name) for src, dst, ratio in recorded if ratio == 1.0]
-    assert plain and all(src.name == dst.stem + ".src" for src, dst in plain)
+        assert ratio == voices_by_id[voice_id].shift_ratio
+        assert src.name == f"{dst.stem}.src"
+    synth_keys = {
+        row[0]
+        for row in ctx_with_cards.store.conn.execute(
+            "SELECT cache_key FROM audio WHERE voice_id = 'synth-teen-f'"
+        ).fetchall()
+    }
+    assert len(synth_keys) == 3  # una fila por tarjeta
+    synth_calls = [(src, dst, ratio) for src, dst, ratio in recorded if dst.stem in synth_keys]
+    assert len(synth_calls) == 3
+    assert all(ratio == 1.08 for _src, _dst, ratio in synth_calls)
 
 
 def _app() -> typer.Typer:
+    # Segundo comando solo para que typer use modo grupo (con uno solo
+    # invocaría el comando directamente sin aceptar su nombre); igual que
+    # tests/core/test_cli.py.
     app = typer.Typer()
+
+    @app.command()
+    def ping() -> None:
+        typer.echo("pong")
+
     audio_run.register(app)
     return app
 
 
-def test_cli_audio_exit_code_partial(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_cli_audio_exit_code_partial(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     root = tmp_path / "data"
     (root / ".cache").mkdir(parents=True)
     store = Store.open(root / ".cache" / "state.db")
@@ -320,3 +333,131 @@ def test_cli_audio_exit_code_partial(
     monkeypatch.setattr("frances.audio.run._sleep", _no_sleep)
     result = CliRunner().invoke(_app(), ["audio", "--data", str(root), "--max", "5"])
     assert result.exit_code == 2, result.output
+    # El reporte partial de verdad: la fila quedó en intento fallado, no pending.
+    store = Store.open(root / ".cache" / "state.db")
+    try:
+        rows = store.conn.execute("SELECT status, attempts FROM audio").fetchall()
+    finally:
+        store.close()
+    assert ("pending", 1) in rows  # el clip fallado: un intento, no terminal
+    assert ("pending", 0) in rows  # los que quedaron sin despachar por el tope
+
+
+def test_make_engines_edge_only_without_key(tmp_path: Path) -> None:
+    ctx = make_context(tmp_path / "data", env={})
+    try:
+        engines = audio_run.make_engines(ctx)
+        assert isinstance(engines.edge, EdgeEngine)
+        assert engines.azure is None
+    finally:
+        ctx.store.close()
+
+
+def test_make_engines_azure_from_env(tmp_path: Path) -> None:
+    key = "clave-azure-fake-0001"
+    ctx = make_context(
+        tmp_path / "data", env={"AZURE_SPEECH_KEY": key, "AZURE_SPEECH_REGION": "westeurope"}
+    )
+    try:
+        engines = audio_run.make_engines(ctx)
+        assert isinstance(engines.edge, EdgeEngine)
+        assert isinstance(engines.azure, AzureTtsEngine)
+    finally:
+        ctx.store.close()
+    # Sin región explícita también se configura Azure (usa "eastus" por defecto).
+    default = make_context(tmp_path / "data2", env={"AZURE_SPEECH_KEY": key})
+    try:
+        assert isinstance(audio_run.make_engines(default).azure, AzureTtsEngine)
+    finally:
+        default.store.close()
+
+
+def test_forced_azure_without_key_raises(tmp_path: Path) -> None:
+    ctx = make_context(tmp_path / "data", env={})
+    try:
+        with pytest.raises(ConfigError):
+            run_audio(ctx, None, "azure")
+    finally:
+        ctx.store.close()
+
+
+def test_postprocess_failure_marks_clip_failed(
+    ctx_with_cards: StageContext, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def write_junk(_text: str, _voice: Voice, out: Path) -> None:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text("no soy audio", encoding="utf-8")
+
+    _install_engines(monkeypatch, write_junk)
+    report = run_audio(ctx_with_cards, None, "edge")
+    assert report.status == "partial"
+    assert report.counts["done"] == 0
+    assert report.counts["failed"] == 12
+    # Fallo de clip (no terminal): attempts 1 y la fila sigue pending.
+    assert _statuses(ctx_with_cards.store) == {"pending": 12}
+    rows = ctx_with_cards.store.conn.execute(
+        "SELECT attempts, error FROM audio WHERE error IS NOT NULL"
+    ).fetchall()
+    assert [attempts for attempts, _error in rows] == [1] * 12
+    assert all("ffmpeg" in error for _attempts, error in rows)
+
+
+def test_clip_with_unknown_voice_fails(
+    ctx_with_cards: StageContext, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_engines(monkeypatch, _write_sine)
+    key = "f" * 32
+    with ctx_with_cards.store.tx() as conn:
+        # Tarjeta stale: plan_audio no la toca y el enlace manual sobrevive.
+        conn.execute(
+            "INSERT INTO cards VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (
+                "c_stale",
+                "vocab",
+                "Stale",
+                "Hola",
+                None,
+                None,
+                None,
+                None,
+                "[]",
+                "[]",
+                "rules",
+                "1",
+                1,
+                NOW,
+                NOW,
+            ),
+        )
+        conn.execute(
+            "INSERT INTO audio VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (
+                key,
+                "Stale",
+                "stale",
+                "fr-XX-DesconocidaNeural",
+                "ms-neural",
+                "1",
+                "pending",
+                None,
+                None,
+                None,
+                None,
+                0,
+                None,
+                NOW,
+            ),
+        )
+        conn.execute("INSERT INTO card_audio VALUES ('c_stale', 'front', ?)", (key,))
+    report = run_audio(ctx_with_cards, None, "edge")
+    assert report.status == "partial"
+    assert report.counts["done"] == 12
+    assert report.counts["failed"] == 1
+    error = ctx_with_cards.store.conn.execute(
+        "SELECT error FROM audio WHERE cache_key = ?", (key,)
+    ).fetchone()[0]
+    assert "fr-XX-DesconocidaNeural" in error and "no está en el registro" in error
+
+
+def test_real_sleep_backoff_yields() -> None:
+    asyncio.run(audio_run._sleep(0))
