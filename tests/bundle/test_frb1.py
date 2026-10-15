@@ -20,6 +20,7 @@ from frances.bundle.frb1 import (
     derive_master,
     encrypt,
     file_id,
+    main,
     make_check,
 )
 
@@ -87,6 +88,20 @@ def test_check_decrypts_to_frb1_ok() -> None:
     enc, non = _keys("demo demo demo demo demo demo")
     assert CHECK_PLAINTEXT == b"FRB1-OK"
     assert decrypt(b64url_decode(make_check(enc, non)), enc) == b"FRB1-OK"
+
+
+def test_short_blob_raises() -> None:
+    enc, _ = _keys("demo demo demo demo demo demo")
+    with pytest.raises(ValueError):
+        decrypt(b"FRB1" + bytes(10), enc)
+
+
+def test_main_write_vectors(tmp_path: Path, fixtures_dir: Path) -> None:
+    out = tmp_path / "sub" / "vectors.json"
+    assert main(["--write-vectors", str(out)]) == 0
+    assert json.loads(out.read_text(encoding="utf-8")) == json.loads(
+        (fixtures_dir / "frb1_vectors.json").read_text(encoding="utf-8")
+    )
 
 
 def test_vectors_reproducible(fixtures_dir: Path) -> None:
