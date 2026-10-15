@@ -1,0 +1,14 @@
+{
+  "capabilities": {
+    "canDownload": true
+  },
+  "createdTime": "2026-08-04T13:00:00Z",
+  "exportLinks": {
+    "text/plain": "https://www.googleapis.com/drive/v3/files/drive_doc_texte/export?mimeType=text/plain"
+  },
+  "id": "drive_doc_texte",
+  "mimeType": "application/vnd.google-apps.document",
+  "modifiedTime": "2026-08-04T16:00:00.579Z",
+  "name": "texte-lecture",
+  "version": "6"
+}

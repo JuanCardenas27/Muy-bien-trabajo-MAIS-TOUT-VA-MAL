@@ -1,0 +1,13 @@
+{
+  "capabilities": {
+    "canDownload": true
+  },
+  "createdTime": "2026-08-04T13:00:00Z",
+  "id": "drive_pdf_lesson",
+  "md5Checksum": "67b885d76edc0472b65889b2a71900eb",
+  "mimeType": "application/pdf",
+  "modifiedTime": "2026-08-04T15:00:00.847Z",
+  "name": "lesson-text.pdf",
+  "size": "23695",
+  "version": "10"
+}
