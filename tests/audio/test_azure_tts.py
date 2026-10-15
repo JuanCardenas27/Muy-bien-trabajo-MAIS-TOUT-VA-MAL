@@ -30,6 +30,19 @@ DENISE = Voice(
     accent="Francia",
 )
 
+SYNTH_CHILD_M = Voice(
+    id="synth-child-m",
+    label="Niño",
+    engine="edge",
+    age="child",
+    gender="male",
+    accent="Francia",
+    source="synthetic",
+    derived_from="fr-FR-RemyMultilingualNeural",
+    pitch_hz=60,
+    shift_ratio=1.25,
+)
+
 
 @pytest.fixture
 def store(tmp_path: Path) -> Iterator[Store]:
@@ -46,6 +59,10 @@ def test_ssml_escapes_text() -> None:
     assert build_ssml("Tom & <Jerry>", DENISE) == (
         "<speak version='1.0' xml:lang='fr-FR'><voice name='fr-FR-DeniseNeural'>"
         "Tom &amp; &lt;Jerry&gt;</voice></speak>"
+    )
+    assert build_ssml("Bonjour", SYNTH_CHILD_M) == (
+        "<speak version='1.0' xml:lang='fr-FR'><voice name='fr-FR-RemyMultilingualNeural'>"
+        "<prosody pitch='+60Hz'>Bonjour</prosody></voice></speak>"
     )
 
 
