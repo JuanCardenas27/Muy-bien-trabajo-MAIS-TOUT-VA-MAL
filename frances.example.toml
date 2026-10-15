@@ -1,0 +1,41 @@
+# Ejemplo de configuración de Frances Classroom.
+# Cópialo a frances.toml dentro de tu repo de datos y ajústalo.
+# Los secretos NUNCA van aquí: solo por variables de entorno (ver README).
+
+[classroom]
+# Ids de cursos a incluir; vacío = todos los ACTIVE que pasen el regex.
+include_course_ids = []
+# Regex (insensible a mayúsculas) sobre el nombre del curso para filtrar.
+include_name_regex = "(?i)fran"
+# Tamaño máximo por adjunto descargado, en MB.
+max_download_mb = 50
+
+[cards]
+# Motor LLM: "auto" (solo si LLM_BASE_URL está definido) u "off".
+llm = "auto"
+# Tope diario de publicaciones enviadas al LLM.
+llm_daily_item_limit = 30
+# Máximo de tarjetas de vocabulario por publicación.
+vocab_per_item_max = 25
+
+[audio]
+# Voces fijas que siempre tienen audio.
+fixed_voices = ["fr-FR-DeniseNeural", "fr-FR-HenriNeural"]
+# Voces rotativas por tarjeta (para variar la exposición).
+rotating = 1
+# Tope mensual de caracteres de Azure TTS (plan F0).
+azure_tts_monthly_char_cap = 450000
+# Máximo de clips sintetizados por ejecución.
+max_clips_per_run = 3000
+
+[translator]
+# Tope mensual de caracteres del traductor Azure (plan F0).
+monthly_char_cap = 1800000
+
+[bundle]
+# Sal 16 bytes en b64url para derivar la clave (obligatoria en deploy, no es secreto).
+salt = ""
+# Iteraciones de PBKDF2-HMAC-SHA256 para la clave del bundle.
+iterations = 600000
+# Tamaño máximo total del bundle publicado, en MB.
+max_total_mb = 900
