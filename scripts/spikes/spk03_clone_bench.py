@@ -28,7 +28,10 @@ IMPORTANTE: este archivo NO declara dependencias de motor en PEP 723
     setuptools>=81 lo elimino y PerthImplicitWatermarker queda en None).
 
     COQUI_TOS_AGREED=1 uv run --python 3.11 --with coqui-tts==0.27.5 \
+        --with torch==2.6.0 --with torchaudio==2.6.0 \
         scripts/spikes/spk03_clone_bench.py run --engine xtts --limit 10
+    (coqui-tts trae torch/torchaudio solo como extras `cpu`/`cuda`, asi que
+    se fijan explicitos; torch 2.6.0 es el mismo que resolvio chatterbox).
 
 Subcomandos:
     make-ref            genera .cache/spikes/spk03/ref.wav (24 kHz mono, 10-15 s)
