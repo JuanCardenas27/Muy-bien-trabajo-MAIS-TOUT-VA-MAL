@@ -34,15 +34,11 @@ class StageReport:
         return {"ok": 0, "partial": 2, "failed": 1}[self.status]
 
 
-def make_context(
-    data_dir: Path, env: Mapping[str, str] | None = None
-) -> StageContext:
+def make_context(data_dir: Path, env: Mapping[str, str] | None = None) -> StageContext:
     """Arma el contexto de etapa desde `--data DIR` (`env None` → `os.environ`)."""
     resolved_env: Mapping[str, str] = dict(os.environ) if env is None else dict(env)
     paths = DataPaths(data_dir)
     paths.ensure_dirs()
     settings = load_settings(paths.config, resolved_env)
     store = Store.open(paths.state_db)
-    return StageContext(
-        settings=settings, paths=paths, store=store, env=resolved_env, now=now_utc
-    )
+    return StageContext(settings=settings, paths=paths, store=store, env=resolved_env, now=now_utc)

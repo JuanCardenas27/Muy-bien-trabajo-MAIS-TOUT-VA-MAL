@@ -48,7 +48,7 @@ def dump_sql(store: Store) -> str:
         " WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
     ).fetchall()
     lines = [_HEADER]
-    for name, ddl in entries:
+    for _name, ddl in entries:
         text = str(ddl).strip()
         if not text.endswith(";"):
             text += ";"
@@ -58,9 +58,7 @@ def dump_sql(store: Store) -> str:
         order = ", ".join(f'"{col}"' for col in _order_columns(conn, table))
         rows = conn.execute(f'SELECT * FROM "{table}" ORDER BY {order}').fetchall()
         for row in rows:
-            lines.append(
-                f"INSERT INTO {table} VALUES ({', '.join(_literal(v) for v in row)});"
-            )
+            lines.append(f"INSERT INTO {table} VALUES ({', '.join(_literal(v) for v in row)});")
     return "\n".join(lines) + "\n"
 
 

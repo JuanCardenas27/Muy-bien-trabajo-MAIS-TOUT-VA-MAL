@@ -43,7 +43,6 @@ def record_run(
         sort_keys=True,
     )
     conn.execute(
-        "INSERT INTO runs (stage, started_at, finished_at, status, stats)"
-        " VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO runs (stage, started_at, finished_at, status, stats) VALUES (?, ?, ?, ?, ?)",
         (report.stage, started_at, finished_at, report.status, stats),
     )

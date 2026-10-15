@@ -14,9 +14,7 @@ def _restore_cmd(data: Path) -> None:
     paths = DataPaths(data)
     paths.ensure_dirs()
     if paths.state_sql.exists():
-        store = restore_sql(
-            paths.state_sql.read_text(encoding="utf-8"), paths.state_db
-        )
+        store = restore_sql(paths.state_sql.read_text(encoding="utf-8"), paths.state_db)
         store.close()
     else:
         Store.open(paths.state_db).close()

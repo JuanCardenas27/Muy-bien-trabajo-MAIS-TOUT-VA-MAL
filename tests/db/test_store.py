@@ -26,9 +26,7 @@ def populated_store(tmp_path: Path) -> Iterator[Store]:
             "INSERT INTO courses VALUES (?,?,?,?,?,?,?,?)",
             ("c1", "Français", None, "ACTIVE", None, NOW, 1, "{}"),
         )
-        conn.execute(
-            "INSERT INTO topics VALUES (?,?,?,?)", ("t1", "c1", "Salutations", NOW)
-        )
+        conn.execute("INSERT INTO topics VALUES (?,?,?,?)", ("t1", "c1", "Salutations", NOW))
         conn.execute(
             "INSERT INTO items VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (
@@ -51,9 +49,7 @@ def populated_store(tmp_path: Path) -> Iterator[Store]:
                 None,
             ),
         )
-        conn.execute(
-            "INSERT INTO blobs VALUES (?,?,?,?)", ("ab" * 32, 10, "application/pdf", NOW)
-        )
+        conn.execute("INSERT INTO blobs VALUES (?,?,?,?)", ("ab" * 32, 10, "application/pdf", NOW))
         conn.execute(
             "INSERT INTO attachments VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (
@@ -96,8 +92,7 @@ def populated_store(tmp_path: Path) -> Iterator[Store]:
             ),
         )
         conn.execute(
-            "INSERT INTO runs (stage, started_at, finished_at, status, stats)"
-            " VALUES (?,?,?,?,?)",
+            "INSERT INTO runs (stage, started_at, finished_at, status, stats) VALUES (?,?,?,?,?)",
             ("sync", NOW, NOW, "ok", '{"counts":{},"errors":[]}'),
         )
     yield s
