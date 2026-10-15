@@ -1,0 +1,153 @@
+# Voces por defecto de Frances Classroom (AUD-01).
+# 13 voces builtin de Edge-TTS confirmadas en ADR-001 + 4 sintéticas jóvenes
+# provisionales (R-16; ADR-002/SPK-02 fija los valores definitivos de oído).
+# Formato: `voices: [{id, label, engine, age, gender, accent, ...}]`.
+voices:
+  - id: fr-FR-DeniseNeural
+    label: Denise · Francia · adulta
+    engine: edge
+    source: builtin
+    age: adult
+    gender: female
+    accent: Francia
+    enabled: true
+  - id: fr-FR-EloiseNeural
+    label: Eloise · Francia · niña
+    engine: edge
+    source: builtin
+    age: child
+    gender: female
+    accent: Francia
+    enabled: true
+  - id: fr-FR-HenriNeural
+    label: Henri · Francia · adulto
+    engine: edge
+    source: builtin
+    age: adult
+    gender: male
+    accent: Francia
+    enabled: true
+  - id: fr-FR-RemyMultilingualNeural
+    label: Rémy · Francia · adulto
+    engine: edge
+    source: builtin
+    age: adult
+    gender: male
+    accent: Francia
+    enabled: true
+  - id: fr-FR-VivienneMultilingualNeural
+    label: Vivienne · Francia · adulta
+    engine: edge
+    source: builtin
+    age: adult
+    gender: female
+    accent: Francia
+    enabled: true
+  - id: fr-BE-CharlineNeural
+    label: Charline · Bélgica · adulta
+    engine: edge
+    source: builtin
+    age: adult
+    gender: female
+    accent: Bélgica
+    enabled: true
+  - id: fr-BE-GerardNeural
+    label: Gérard · Bélgica · adulto
+    engine: edge
+    source: builtin
+    age: adult
+    gender: male
+    accent: Bélgica
+    enabled: true
+  - id: fr-CA-AntoineNeural
+    label: Antoine · Canadá · adulto
+    engine: edge
+    source: builtin
+    age: adult
+    gender: male
+    accent: Canadá
+    enabled: true
+  - id: fr-CA-JeanNeural
+    label: Jean · Canadá · adulto
+    engine: edge
+    source: builtin
+    age: adult
+    gender: male
+    accent: Canadá
+    enabled: true
+  - id: fr-CA-SylvieNeural
+    label: Sylvie · Canadá · adulta
+    engine: edge
+    source: builtin
+    age: adult
+    gender: female
+    accent: Canadá
+    enabled: true
+  - id: fr-CA-ThierryNeural
+    label: Thierry · Canadá · adulto
+    engine: edge
+    source: builtin
+    age: adult
+    gender: male
+    accent: Canadá
+    enabled: true
+  - id: fr-CH-ArianeNeural
+    label: Ariane · Suiza · adulta
+    engine: edge
+    source: builtin
+    age: adult
+    gender: female
+    accent: Suiza
+    enabled: true
+  - id: fr-CH-FabriceNeural
+    label: Fabrice · Suiza · adulto
+    engine: edge
+    source: builtin
+    age: adult
+    gender: male
+    accent: Suiza
+    enabled: true
+  - id: synth-teen-f
+    label: Adolescente · chica
+    engine: edge
+    source: synthetic
+    derived_from: fr-FR-VivienneMultilingualNeural
+    age: teen
+    gender: female
+    accent: Francia
+    enabled: true
+    pitch_hz: 20
+    shift_ratio: 1.08
+  - id: synth-teen-m
+    label: Adolescente · chico
+    engine: edge
+    source: synthetic
+    derived_from: fr-FR-HenriNeural
+    age: teen
+    gender: male
+    accent: Francia
+    enabled: true
+    pitch_hz: 25
+    shift_ratio: 1.12
+  - id: synth-child-f
+    label: Niña
+    engine: edge
+    source: synthetic
+    derived_from: fr-FR-EloiseNeural
+    age: child
+    gender: female
+    accent: Francia
+    enabled: true
+    pitch_hz: 10
+    shift_ratio: 1.08
+  - id: synth-child-m
+    label: Niño
+    engine: edge
+    source: synthetic
+    derived_from: fr-FR-RemyMultilingualNeural
+    age: child
+    gender: male
+    accent: Francia
+    enabled: true
+    pitch_hz: 60
+    shift_ratio: 1.25
