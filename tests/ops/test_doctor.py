@@ -33,6 +33,12 @@ app = typer.Typer()
 doctor.register(app)
 
 
+@app.command()
+def ping() -> None:
+    """Segundo comando para que typer use modo grupo (igual que tests/audio/test_run.py)."""
+    typer.echo("pong")
+
+
 class FakeBin:
     """El `frances` falso de `fake_bin`: anota su argv y sale 3."""
 
