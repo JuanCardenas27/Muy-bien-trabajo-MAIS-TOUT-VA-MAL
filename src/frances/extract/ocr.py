@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-import pytesseract
+import pytesseract  # type: ignore[import-untyped]
 from PIL import Image, ImageOps
 
 
@@ -11,7 +11,7 @@ def preprocess(img: Image.Image) -> Image.Image:
     gray = ImageOps.autocontrast(ImageOps.grayscale(img))
     width, height = gray.size
     if width < 1000:
-        return gray.resize((width * 2, height * 2), Image.LANCZOS)
+        return gray.resize((width * 2, height * 2), Image.Resampling.LANCZOS)
     return gray
 
 

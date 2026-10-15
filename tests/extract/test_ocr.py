@@ -12,9 +12,7 @@ from frances.extract.ocr import ocr_file, preprocess, tesseract_version
 
 FIX = Path(__file__).resolve().parent.parent / "fixtures"
 
-needs_tesseract = pytest.mark.skipif(
-    shutil.which("tesseract") is None, reason="tesseract"
-)
+needs_tesseract = pytest.mark.skipif(shutil.which("tesseract") is None, reason="tesseract")
 
 
 def fold(s: str) -> str:
