@@ -38,10 +38,7 @@ test('wrong passphrase shows error and keeps input', async () => {
 
 test('success navigates to next', async () => {
   setup(vi.fn().mockResolvedValue(true), '/unlock?next=%2Fcards');
-  await userEvent.type(
-    screen.getByLabelText('Passphrase'),
-    'y'.repeat(24),
-  );
+  await userEvent.type(screen.getByLabelText('Passphrase'), 'y'.repeat(24));
   await userEvent.click(screen.getByRole('button', { name: 'Desbloquear' }));
   expect(await screen.findByText('tarjetas')).toBeTruthy();
 });
@@ -59,10 +56,7 @@ test('remember unchecked does not persist key', async () => {
 
 test('ignores external next', async () => {
   setup(vi.fn().mockResolvedValue(true), '/unlock?next=%2F%2Fevil.example');
-  await userEvent.type(
-    screen.getByLabelText('Passphrase'),
-    'y'.repeat(24),
-  );
+  await userEvent.type(screen.getByLabelText('Passphrase'), 'y'.repeat(24));
   await userEvent.click(screen.getByRole('button', { name: 'Desbloquear' }));
   expect(await screen.findByText('inicio')).toBeTruthy();
 });
@@ -73,10 +67,7 @@ test('shows busy text while deriving', async () => {
     resolveUnlock = resolve;
   });
   setup(vi.fn().mockReturnValue(pending));
-  await userEvent.type(
-    screen.getByLabelText('Passphrase'),
-    'y'.repeat(24),
-  );
+  await userEvent.type(screen.getByLabelText('Passphrase'), 'y'.repeat(24));
   await userEvent.click(screen.getByRole('button', { name: 'Desbloquear' }));
   const button = await screen.findByRole('button', { name: 'Abriendo…' });
   expect(button.getAttribute('aria-busy')).toBe('true');
