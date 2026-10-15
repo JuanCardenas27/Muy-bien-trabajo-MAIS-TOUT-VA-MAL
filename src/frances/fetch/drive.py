@@ -13,9 +13,7 @@ from frances.sync.google_http import ForbiddenError, GoogleApi
 DRIVE_BASE_URL = "https://www.googleapis.com/drive/v3"
 NATIVE_PREFIX = "application/vnd.google-apps."
 
-_METADATA_FIELDS = (
-    "id,name,mimeType,size,version,md5Checksum,capabilities/canDownload,exportLinks"
-)
+_METADATA_FIELDS = "id,name,mimeType,size,version,md5Checksum,capabilities/canDownload,exportLinks"
 
 GOOGLE_NATIVE_EXPORTS: dict[str, list[tuple[str, Literal["view", "text"]]]] = {
     f"{NATIVE_PREFIX}document": [("application/pdf", "view"), ("text/plain", "text")],

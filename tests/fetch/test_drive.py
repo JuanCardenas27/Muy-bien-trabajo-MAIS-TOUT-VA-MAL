@@ -12,16 +12,16 @@ import respx
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "fixtures"))
 
-from google_mock import install_google_mocks  # noqa: E402
+from google_mock import install_google_mocks
 
-from frances.fetch.drive import (  # noqa: E402
+from frances.fetch.drive import (
     DRIVE_BASE_URL,
     GOOGLE_NATIVE_EXPORTS,
     DriveClient,
     ExportTooLargeError,
     TooLargeError,
 )
-from frances.sync.google_http import GoogleApi  # noqa: E402
+from frances.sync.google_http import GoogleApi
 
 pytestmark = pytest.mark.respx(assert_all_called=False)
 
@@ -111,7 +111,9 @@ def first_id(
 
 def test_get_metadata_fields(respx_mock: respx.Router) -> None:
     meta = drive_meta("v1")
-    doc = next(i for i, m in meta.items() if m and m["mimeType"] == "application/vnd.google-apps.document")
+    doc = next(
+        i for i, m in meta.items() if m and m["mimeType"] == "application/vnd.google-apps.document"
+    )
     install_google_mocks(respx_mock, "v1")
     m = drive().get_metadata(doc)
     assert (m.mime_type, m.version, m.can_download, m.size) == (
