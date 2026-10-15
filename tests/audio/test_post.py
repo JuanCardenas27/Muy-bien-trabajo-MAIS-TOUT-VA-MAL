@@ -123,5 +123,7 @@ def test_ffmpeg_available_true_in_ci() -> None:
 def test_shift_ratio_keeps_duration_and_raises_pitch(tmp_path: Path) -> None:
     src = make_sine_wav(tmp_path / "s.wav", seconds=1.0, rate=24000, channels=1)
     ms = postprocess(src, tmp_path / "out" / "a.mp3", shift_ratio=1.25)
-    assert 980 <= ms <= 1020
+    # ±60 ms: atempo+MP3 varía según la versión de ffmpeg (994 ms local,
+    # 1056 ms en CI); misma tolerancia que test_postprocess_mp3_defaults.
+    assert 940 <= ms <= 1060
     assert 530 <= dominant_frequency(tmp_path / "out" / "a.mp3") <= 570
