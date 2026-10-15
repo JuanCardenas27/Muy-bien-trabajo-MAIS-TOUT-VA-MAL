@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling==1.32.4"]
+build-backend = "hatchling.build"
+
+[project]
+name = "frances"
+version = "0.1.0"
+description = "Frances Classroom: app personal de estudio de frances"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "pydantic==2.14.1",
+    "typer==0.27.3",
+    "tzdata==2026.5",
+]
+
+[project.scripts]
+frances = "frances.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+    "pytest-socket==0.8.1",
+    "pytest-cov==7.1.0",
+    "respx==0.23.1",
+    "mypy==2.4.0",
+    "ruff==0.17.0",
+    "reportlab==5.0.1",
+    "Pillow==12.3.0",
+    "pypdfium2==5.14.0",
+    "PyYAML==6.0.3",
+    "types-PyYAML==6.0.12.20260906",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/frances"]
+
+[tool.ruff]
+line-length = 100
+# Los planes en docs/ traen snippets ilustrativos (con "...", tablas, etc.)
+# que no son codigo formateable; pertenecen a otras tareas (fuera de owns FND-01).
+exclude = ["docs/**"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.mypy]
+strict = true
+mypy_path = "src"
+
+[tool.pytest.ini_options]
+addopts = "--disable-socket --allow-unix-socket -m 'not heavy' --cov=frances --cov-report=term-missing --cov-fail-under=85"
+markers = ["heavy: red o modelos pesados; no corre en CI"]
+testpaths = ["tests"]

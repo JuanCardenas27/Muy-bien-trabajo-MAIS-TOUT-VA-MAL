@@ -1,0 +1,8 @@
+.cache/
+*.db
+.env*
+node_modules/
+web/dist/
+.venv/
+__pycache__/
+client_secret*.json
