@@ -18,8 +18,7 @@ from frances.config import ClassroomSettings, Settings
 from frances.db.dump import dump_sql
 from frances.db.store import Store
 from frances.models.ids import item_id
-from frances.sync.classroom import CLASSROOM_BASE_URL, parse_course
-from frances.sync.classroom import ClassroomClient
+from frances.sync.classroom import CLASSROOM_BASE_URL, ClassroomClient, parse_course
 from frances.sync.google_http import GoogleApi, RetryExhaustedError
 from frances.sync.streams import select_courses, sync_stream
 from frances.timeutil import format_ts
@@ -93,9 +92,7 @@ def client(sleep: Any = None) -> ClassroomClient:
     return ClassroomClient(GoogleApi(FakeCreds(), CLASSROOM_BASE_URL, **kw))
 
 
-def raw(
-    cid: str, update_time: str, title: str = "T", materials: Any = ()
-) -> dict[str, Any]:
+def raw(cid: str, update_time: str, title: str = "T", materials: Any = ()) -> dict[str, Any]:
     return {
         "id": cid,
         "courseId": FR,
@@ -147,9 +144,7 @@ def route_two_pages(
     page2_status: int = 200,
 ) -> tuple[_Counter, _Counter]:
     c1, c2 = _Counter(), _Counter()
-    second: list[dict] = (
-        page2 if page2 is not None else [raw("1003", "2026-10-01T11:00:00Z")]
-    )
+    second: list[dict] = page2 if page2 is not None else [raw("1003", "2026-10-01T11:00:00Z")]
 
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.params.get("pageToken") == "p2":
@@ -199,9 +194,7 @@ def attachment(store: Store, item: str, kind: str) -> dict[str, Any]:
     return dict(zip(cols, row, strict=True))
 
 
-def test_watermark_variable_fraction_digits(
-    tmp_path: Path, respx_mock: respx.Router
-) -> None:
+def test_watermark_variable_fraction_digits(tmp_path: Path, respx_mock: respx.Router) -> None:
     store = seeded_store(tmp_path, watermark="2026-10-01T10:00:23.000000Z")
     route_coursework(
         respx_mock,
@@ -231,9 +224,7 @@ def test_stops_paging_at_watermark(tmp_path: Path, respx_mock: respx.Router) -> 
     assert p1.call_count == 1 and p2.call_count == 0
 
 
-def test_failure_mid_stream_keeps_watermark(
-    tmp_path: Path, respx_mock: respx.Router
-) -> None:
+def test_failure_mid_stream_keeps_watermark(tmp_path: Path, respx_mock: respx.Router) -> None:
     store = seeded_store(tmp_path, watermark="2026-09-01T00:00:00.000000Z")
     _p1, p2 = route_two_pages(
         respx_mock,
@@ -246,9 +237,7 @@ def test_failure_mid_stream_keeps_watermark(
     assert p2.call_count == 5
 
 
-def test_overlap_reprocessing_is_idempotent(
-    tmp_path: Path, respx_mock: respx.Router
-) -> None:
+def test_overlap_reprocessing_is_idempotent(tmp_path: Path, respx_mock: respx.Router) -> None:
     install_google_mocks(respx_mock, "v1")
     store = seeded_store(tmp_path, watermark=None)
     sync_stream(store, client(), FR, "coursework", NOW)
@@ -261,9 +250,7 @@ def test_edited_item_updates_and_marks_removed_attachment(
     tmp_path: Path, respx_mock: respx.Router
 ) -> None:
     store = seeded_store(tmp_path, watermark=None)
-    route_coursework(
-        respx_mock, [raw("1002", "2026-10-01T12:00:00Z", materials=[M_PDF, M_LINK])]
-    )
+    route_coursework(respx_mock, [raw("1002", "2026-10-01T12:00:00Z", materials=[M_PDF, M_LINK])])
     sync_stream(store, client(), FR, "coursework", NOW)
     route_coursework(
         respx_mock,

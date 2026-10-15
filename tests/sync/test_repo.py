@@ -10,10 +10,10 @@ from frances.models.ids import attachment_id, item_id
 from frances.sync.repo import (
     get_watermark,
     live_item_ids,
+    restore_items,
     set_watermark,
     sync_attachments,
     tombstone_items,
-    restore_items,
 )
 
 NOW = "2026-10-14T10:17:00.000000Z"
@@ -86,8 +86,19 @@ def conn(tmp_path) -> sqlite3.Connection:  # type: ignore[no-untyped-def]
         "INSERT INTO attachments (id, item_id, kind, external_id, title, url,"
         " mime_type, drive_version, status, updated_at, removed_at)"
         " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (an_att, AN_ID, "drive_file", "f_x", "X", "https://drive.google.com/f_x",
-         None, None, "pending", NOW, None),
+        (
+            an_att,
+            AN_ID,
+            "drive_file",
+            "f_x",
+            "X",
+            "https://drive.google.com/f_x",
+            None,
+            None,
+            "pending",
+            NOW,
+            None,
+        ),
     )
     return c
 
@@ -98,9 +109,7 @@ def status_of(conn: sqlite3.Connection, att_id: str) -> str | None:
 
 
 def removed_at(conn: sqlite3.Connection, att_id: str) -> str | None:
-    row = conn.execute(
-        "SELECT removed_at FROM attachments WHERE id = ?", (att_id,)
-    ).fetchone()
+    row = conn.execute("SELECT removed_at FROM attachments WHERE id = ?", (att_id,)).fetchone()
     return str(row[0]) if row and row[0] is not None else None
 
 
