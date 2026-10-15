@@ -1,0 +1,11 @@
+name = "frances-data"
+main = "src/index.ts"
+compatibility_date = "2026-10-14"
+
+[[r2_buckets]]
+binding = "SITE"
+bucket_name = "frances-data"
+
+[vars]
+# Lo fija el deploy (worker-deploy.yml): nunca "*" y nunca en el repo.
+ALLOWED_ORIGIN = ""
