@@ -73,7 +73,7 @@ Las variables sensibles se definen en el entorno (en producción, como secretos 
 
 | Variable | Obligatoria | Uso |
 | --- | --- | --- |
-| `LLM_BASE_URL` | No | URL base de un endpoint compatible con la API de OpenAI que genera las tarjetas. Si no está definida, la generación LLM queda desactivada y se usa el respaldo determinista. |
+| `LLM_BASE_URL` | No | URL base del endpoint de chat que genera las tarjetas (API estándar de chat/completions). Si no está definida, la generación LLM queda desactivada y se usa el respaldo determinista. |
 | `LLM_API_KEY` | No | Clave de API para autenticarse contra ese endpoint. Nunca la escribas en el TOML ni en el código. |
 | `LLM_MODEL` | No | Modelo a invocar en ese endpoint. |
 
