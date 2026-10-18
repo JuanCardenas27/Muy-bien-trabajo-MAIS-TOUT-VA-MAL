@@ -74,7 +74,13 @@ test('miscue fixture keeps omission word', () => {
     ...base,
     NBest: [{ ...base.NBest?.[0], Words: [...raw, omission] }],
   };
-  const r = parseAzureResult(input, 'Nous allons au marché demain.', null, at, 900);
+  const r = parseAzureResult(
+    input,
+    'Nous allons au marché demain.',
+    null,
+    at,
+    900,
+  );
   const words = input.NBest?.[0]?.Words ?? [];
   const i = words.findIndex(
     (w) => w.PronunciationAssessment?.ErrorType === 'Omission',
@@ -89,9 +95,9 @@ test('miscue fixture keeps omission word', () => {
 });
 
 test('missing NBest throws PronParseError', () =>
-  expect(() =>
-    parseAzureResult({ DisplayText: '' }, 'x', null, at, 0),
-  ).toThrow(PronParseError));
+  expect(() => parseAzureResult({ DisplayText: '' }, 'x', null, at, 0)).toThrow(
+    PronParseError,
+  ));
 
 test('parses every azure fixture with its raw pron score and canonical phonemes', () => {
   const all = import.meta.glob('../../../tests/fixtures/azure/*.json', {
@@ -111,7 +117,9 @@ test('parses every azure fixture with its raw pron score and canonical phonemes'
   );
   for (const raw of Object.values(all) as AzureJson[]) {
     const r = parseAzureResult(raw, 'x', null, at, 1);
-    expect(r.scores.pron).toBe(raw.NBest?.[0]?.PronunciationAssessment?.PronScore);
+    expect(r.scores.pron).toBe(
+      raw.NBest?.[0]?.PronunciationAssessment?.PronScore,
+    );
     for (const p of r.words.flatMap((w) => w.phonemes)) {
       expect(p.phoneme).toBe(normalizePhoneme(p.phoneme));
     }
