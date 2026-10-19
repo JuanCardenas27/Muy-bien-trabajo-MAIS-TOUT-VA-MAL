@@ -15,7 +15,7 @@ targets:
       - {front_fr: "la langue", back_es: "la lengua", notes: null}
       - {front_fr: "vendredi", back_es: "viernes", notes: null}
       - {front_fr: "le manteau", back_es: "el abrigo", notes: null}
-      - {front_fr: "la chanson", back_es: "la canción", notes: null}
+      - {front_fr: "le ruban", back_es: "la cinta", notes: null}
       - {front_fr: "content", back_es: "contento", notes: null}
       - {front_fr: "janvier", back_es: "enero", notes: null}
       - {front_fr: "le banc", back_es: "el banco", notes: "banc / bon"}
@@ -82,7 +82,7 @@ targets:
       - {front_fr: "le nez", back_es: "la nariz", notes: "nez / naît"}
       - {front_fr: "assez", back_es: "bastante", notes: null}
       - {front_fr: "la forêt", back_es: "el bosque", notes: null}
-      - {front_fr: "janvier", back_es: "enero", notes: null}
+      - {front_fr: "le café", back_es: "el café", notes: null}
   "r":
     phoneme: "ʁ"
     check: ["ʁ"]
@@ -99,8 +99,8 @@ targets:
       - {front_fr: "vert", back_es: "verde", notes: null}
       - {front_fr: "noir", back_es: "negro", notes: null}
       - {front_fr: "la mer", back_es: "el mar", notes: null}
-      - {front_fr: "le père", back_es: "el padre", notes: null}
-      - {front_fr: "bonjour", back_es: "buenos días", notes: null}
+      - {front_fr: "la porte", back_es: "la puerta", notes: null}
+      - {front_fr: "la gare", back_es: "la estación", notes: null}
       - {front_fr: "merci", back_es: "gracias", notes: null}
       - {front_fr: "la fourmi", back_es: "la hormiga", notes: null}
       - {front_fr: "le fromage", back_es: "el queso", notes: null}
