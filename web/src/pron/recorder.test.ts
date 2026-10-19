@@ -31,8 +31,7 @@ const allez = {
 
 const stop = vi.fn();
 const okGum = vi.fn(
-  async (_constraints: MediaStreamConstraints) =>
-    ({ getTracks: () => [{ stop }] }) as unknown as MediaStream,
+  async () => ({ getTracks: () => [{ stop }] }) as unknown as MediaStream,
 );
 
 test('mic denied moves to error state with message', async () => {
@@ -53,9 +52,8 @@ test('mic denied moves to error state with message', async () => {
 });
 
 test('no microphone and no mediaDevices messages', async () => {
-  const nf = createRecorder(
-    { assess: vi.fn() } as unknown as Recognizer,
-    () => Promise.reject(new DOMException('x', 'NotFoundError')),
+  const nf = createRecorder({ assess: vi.fn() } as unknown as Recognizer, () =>
+    Promise.reject(new DOMException('x', 'NotFoundError')),
   );
   await nf.start('Bonjour', null);
   expect(nf.getState()).toEqual({

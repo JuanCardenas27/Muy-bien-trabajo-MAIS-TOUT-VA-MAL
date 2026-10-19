@@ -14,10 +14,7 @@ export interface Recognizer {
 }
 
 export type RecognizerErrorCode =
-  | 'no_match'
-  | 'unauthorized'
-  | 'quota'
-  | 'canceled';
+  'no_match' | 'unauthorized' | 'quota' | 'canceled';
 
 export class RecognizerError extends Error {
   readonly code: RecognizerErrorCode;
@@ -120,7 +117,9 @@ export function createAzureRecognizer(creds: SpeechCredentials): Recognizer {
   };
 }
 
-export function getRecognizer(creds: SpeechCredentials | null): Recognizer | null {
+export function getRecognizer(
+  creds: SpeechCredentials | null,
+): Recognizer | null {
   if (import.meta.env.VITE_E2E === '1') {
     const fake = (window as unknown as { __francesFakeRecognizer?: Recognizer })
       .__francesFakeRecognizer;

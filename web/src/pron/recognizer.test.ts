@@ -23,7 +23,7 @@ const H = vi.hoisted(() => {
   const PropertyId = { SpeechServiceResponse_JsonResult: 'json' };
 
   const speechConfig: { speechRecognitionLanguage?: string } = {};
-  const fromSubscription = vi.fn((_key: string, _region: string) => speechConfig);
+  const fromSubscription = vi.fn(() => speechConfig);
   const audioConfig = {};
   const fromDefaultMicrophoneInput = vi.fn(() => audioConfig);
 
@@ -119,7 +119,11 @@ vi.mock('microsoft-cognitiveservices-speech-sdk', () => {
 
 import { createAzureRecognizer, getRecognizer } from './recognizer';
 
-const creds: SpeechCredentials = { region: 'eastus', key: 'k', locale: 'fr-FR' };
+const creds: SpeechCredentials = {
+  region: 'eastus',
+  key: 'k',
+  locale: 'fr-FR',
+};
 
 const mockRecognized = (result: { duration: number; json: string }) => {
   H.state.recognized = result;
@@ -170,9 +174,9 @@ test('canceled and no match map to error codes', async () => {
   ];
   for (const [mock, code] of cases) {
     mock();
-    await expect(createAzureRecognizer(creds).assess('x')).rejects.toMatchObject(
-      { code },
-    );
+    await expect(
+      createAzureRecognizer(creds).assess('x'),
+    ).rejects.toMatchObject({ code });
   }
 });
 
@@ -184,6 +188,5 @@ test('getRecognizer uses e2e fake only when VITE_E2E is 1', () => {
   vi.stubEnv('VITE_E2E', '0');
   expect(getRecognizer(null)).toBeNull();
   vi.unstubAllEnvs();
-  delete (window as unknown as Record<string, unknown>)
-    .__francesFakeRecognizer;
+  delete (window as unknown as Record<string, unknown>).__francesFakeRecognizer;
 });
