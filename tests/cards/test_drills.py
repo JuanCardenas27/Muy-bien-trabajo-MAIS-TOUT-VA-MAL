@@ -79,8 +79,8 @@ def test_curated_decks(conn: sqlite3.Connection) -> None:
     assert set(decks) >= {f"drill-{t}" for t in TARGETS}
     an = decks["drill-an"]
     assert an.curated
-    assert an.phoneme == ESPEAK_TO_AZURE["ɑ̃"]
-    assert an.title_es == "Nasal /ɑ̃/ (an, en)"
+    assert an.phoneme == ESPEAK_TO_AZURE["ɑ̃"]  # noqa: RUF001
+    assert an.title_es == "Nasal /ɑ̃/ (an, en)"  # noqa: RUF001
     assert an.card_ids[0] == card_id("le vent", "drill")
 
 
