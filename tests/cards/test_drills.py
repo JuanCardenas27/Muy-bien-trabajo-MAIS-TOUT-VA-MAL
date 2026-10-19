@@ -47,6 +47,7 @@ def test_seed_has_15_entries_per_target() -> None:
 
 
 def test_seed_idempotent(conn: sqlite3.Connection) -> None:
+    conn.row_factory = sqlite3.Row
     total = sum(len(t.entries) for t in load_seed().values())
     assert seed_drills(conn, T1) == total
     assert seed_drills(conn, T2) == 0
