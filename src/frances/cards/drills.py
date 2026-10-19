@@ -52,9 +52,7 @@ class SeedTarget(BaseModel):
 def load_seed() -> dict[str, SeedTarget]:
     """Lee y valida ``drills_seed.yaml`` del paquete, preservando el orden."""
     text = (
-        importlib.resources.files("frances.cards")
-        .joinpath(_SEED_FILE)
-        .read_text(encoding="utf-8")
+        importlib.resources.files("frances.cards").joinpath(_SEED_FILE).read_text(encoding="utf-8")
     )
     document: Any = yaml.safe_load(text)
     targets: Any = document["targets"]
@@ -162,9 +160,7 @@ def _q_existing_cards(conn: sqlite3.Connection, candidates: list[str]) -> list[s
     if not candidates:
         return []
     placeholders = ",".join("?" for _ in candidates)
-    rows = conn.execute(
-        f"SELECT id FROM cards WHERE id IN ({placeholders})", candidates
-    ).fetchall()
+    rows = conn.execute(f"SELECT id FROM cards WHERE id IN ({placeholders})", candidates).fetchall()
     present = {row[0] for row in rows}
     return [cid for cid in candidates if cid in present]
 
