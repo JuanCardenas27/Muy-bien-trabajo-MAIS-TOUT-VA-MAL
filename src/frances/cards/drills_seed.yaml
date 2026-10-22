@@ -1,0 +1,106 @@
+targets:
+  "an":
+    phoneme: "ɑ̃"
+    check: ["ɑ̃"]
+    title_es: "Nasal /ɑ̃/ (an, en)"
+    entries:
+      - {front_fr: "le vent", back_es: "el viento", notes: "vent / vont / vin"}
+      - {front_fr: "l'enfant", back_es: "el niño", notes: null}
+      - {front_fr: "la chambre", back_es: "la habitación", notes: null}
+      - {front_fr: "dans", back_es: "en; dentro", notes: null}
+      - {front_fr: "grand", back_es: "grande", notes: null}
+      - {front_fr: "la danse", back_es: "el baile", notes: null}
+      - {front_fr: "le temps", back_es: "el tiempo", notes: null}
+      - {front_fr: "ensemble", back_es: "juntos", notes: null}
+      - {front_fr: "la langue", back_es: "la lengua", notes: null}
+      - {front_fr: "vendredi", back_es: "viernes", notes: null}
+      - {front_fr: "le manteau", back_es: "el abrigo", notes: null}
+      - {front_fr: "le ruban", back_es: "la cinta", notes: null}
+      - {front_fr: "content", back_es: "contento", notes: null}
+      - {front_fr: "janvier", back_es: "enero", notes: null}
+      - {front_fr: "le banc", back_es: "el banco", notes: "banc / bon"}
+      - {front_fr: "cent", back_es: "cien", notes: "cent / son"}
+  "on":
+    phoneme: "ɔ̃"
+    check: ["ɔ̃"]
+    title_es: "Nasal /ɔ̃/ (on, om)"
+    entries:
+      - {front_fr: "le pont", back_es: "el puente", notes: "pont / pan / pain"}
+      - {front_fr: "bonjour", back_es: "buenos días", notes: null}
+      - {front_fr: "nous avons", back_es: "nosotros tenemos", notes: null}
+      - {front_fr: "le bonbon", back_es: "el caramelo", notes: null}
+      - {front_fr: "la maison", back_es: "la casa", notes: null}
+      - {front_fr: "non", back_es: "no", notes: null}
+      - {front_fr: "on", back_es: "se; uno", notes: null}
+      - {front_fr: "le monde", back_es: "el mundo", notes: null}
+      - {front_fr: "le nom", back_es: "el nombre", notes: "nom / nain"}
+      - {front_fr: "onze", back_es: "once", notes: null}
+      - {front_fr: "la chanson", back_es: "la canción", notes: null}
+      - {front_fr: "long", back_es: "largo", notes: null}
+      - {front_fr: "le ballon", back_es: "el balón", notes: null}
+      - {front_fr: "le citron", back_es: "el limón", notes: null}
+      - {front_fr: "mon", back_es: "mi", notes: "mon / ment"}
+      - {front_fr: "ton", back_es: "tu", notes: "ton / tant"}
+  "in":
+    phoneme: "ɛ̃"
+    check: ["ɛ̃"]
+    title_es: "Nasal /ɛ̃/ (in, ain, ein)"
+    entries:
+      - {front_fr: "le vin", back_es: "el vino", notes: "vin / vent / vont"}
+      - {front_fr: "le pain", back_es: "el pan", notes: "pain / pont / pan"}
+      - {front_fr: "le matin", back_es: "la mañana", notes: null}
+      - {front_fr: "le lapin", back_es: "el conejo", notes: null}
+      - {front_fr: "vingt", back_es: "veinte", notes: null}
+      - {front_fr: "le jardin", back_es: "el jardín", notes: null}
+      - {front_fr: "demain", back_es: "mañana", notes: null}
+      - {front_fr: "le train", back_es: "el tren", notes: null}
+      - {front_fr: "la faim", back_es: "el hambre", notes: "faim / faon"}
+      - {front_fr: "plein", back_es: "lleno", notes: "plein / plan"}
+      - {front_fr: "le médecin", back_es: "el médico", notes: null}
+      - {front_fr: "le moulin", back_es: "el molino", notes: null}
+      - {front_fr: "la main", back_es: "la mano", notes: null}
+      - {front_fr: "la fin", back_es: "el fin", notes: null}
+      - {front_fr: "le chemin", back_es: "el camino", notes: null}
+      - {front_fr: "le bain", back_es: "el baño", notes: null}
+  "e_vs_ɛ":
+    phoneme: "e"
+    check: ["e", "ɛ"]
+    title_es: "/e/ frente a /ɛ/ (é, è, ai)"
+    entries:
+      - {front_fr: "allez", back_es: "vayan; vamos", notes: "allez / allait"}
+      - {front_fr: "l'été", back_es: "el verano", notes: "été / était"}
+      - {front_fr: "la fête", back_es: "la fiesta", notes: "fée / fête"}
+      - {front_fr: "allait", back_es: "iba", notes: "allait / allez"}
+      - {front_fr: "était", back_es: "era; estaba", notes: null}
+      - {front_fr: "fée", back_es: "hada", notes: "fée / fait"}
+      - {front_fr: "le lait", back_es: "la leche", notes: "lait / les"}
+      - {front_fr: "le blé", back_es: "el trigo", notes: null}
+      - {front_fr: "la mère", back_es: "la madre", notes: null}
+      - {front_fr: "le père", back_es: "el padre", notes: null}
+      - {front_fr: "j'ai", back_es: "tengo", notes: null}
+      - {front_fr: "vrai", back_es: "verdadero", notes: null}
+      - {front_fr: "le nez", back_es: "la nariz", notes: "nez / naît"}
+      - {front_fr: "assez", back_es: "bastante", notes: null}
+      - {front_fr: "la forêt", back_es: "el bosque", notes: null}
+      - {front_fr: "le café", back_es: "el café", notes: null}
+  "r":
+    phoneme: "ʁ"
+    check: ["ʁ"]
+    title_es: "La r francesa /ʁ/"
+    entries:
+      - {front_fr: "rouge", back_es: "rojo", notes: "rouge / bouge"}
+      - {front_fr: "Paris", back_es: "París", notes: null}
+      - {front_fr: "très", back_es: "muy", notes: null}
+      - {front_fr: "la rue", back_es: "la calle", notes: null}
+      - {front_fr: "le riz", back_es: "el arroz", notes: "riz / lit"}
+      - {front_fr: "la radio", back_es: "la radio", notes: null}
+      - {front_fr: "rond", back_es: "redondo", notes: null}
+      - {front_fr: "la route", back_es: "la carretera", notes: null}
+      - {front_fr: "vert", back_es: "verde", notes: null}
+      - {front_fr: "noir", back_es: "negro", notes: null}
+      - {front_fr: "la mer", back_es: "el mar", notes: null}
+      - {front_fr: "la porte", back_es: "la puerta", notes: null}
+      - {front_fr: "la gare", back_es: "la estación", notes: null}
+      - {front_fr: "merci", back_es: "gracias", notes: null}
+      - {front_fr: "la fourmi", back_es: "la hormiga", notes: null}
+      - {front_fr: "le fromage", back_es: "el queso", notes: null}
