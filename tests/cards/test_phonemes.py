@@ -2,6 +2,7 @@
 
 import json
 import sqlite3
+from typing import Any
 
 import pytest
 
@@ -96,3 +97,76 @@ def test_map_version_change_refills(ctx: StageContext, monkeypatch: pytest.Monke
 def test_ipa_display() -> None:
     assert ipa_display("v1|ʁuʒ") == "ʁuʒ"
     assert ipa_display(None) is None
+
+
+def test_batch_stays_aligned_with_silent_and_multiline_texts() -> None:
+    texts = ["…", "Il pleut. Il fait froid.", "le vent"]
+    result = espeak_ipa(texts)
+    assert result == [
+        "",
+        espeak_ipa(["Il pleut. Il fait froid."])[0],
+        espeak_ipa(["le vent"])[0],
+    ]
+    assert "ɑ̃" in result[2]  # noqa: RUF001
+
+
+@pytest.mark.parametrize("silent", ["…", "?", "—", "\U0001f600", "   "])
+def test_text_without_alnum_is_empty_and_skips_espeak(
+    silent: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def _fail(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("no debe llamar a espeak-ng")
+
+    monkeypatch.setattr("frances.cards.phonemes.subprocess.run", _fail)
+    assert espeak_ipa([silent]) == [""]
+
+
+def test_subprocess_uses_utf8(monkeypatch: pytest.MonkeyPatch) -> None:
+    import subprocess
+
+    seen: list[object] = []
+    real_run = subprocess.run
+
+    def _spy(*args: Any, **kwargs: Any) -> Any:
+        seen.append(kwargs.get("encoding"))
+        return real_run(*args, **kwargs)
+
+    monkeypatch.setattr("frances.cards.phonemes.subprocess.run", _spy)
+    espeak_ipa(["…", "Il pleut. Il fait froid.", "rouge"])  # lote + respaldo por texto
+    assert len(seen) >= 2
+    assert all(enc == "utf-8" for enc in seen)
+
+
+def test_unmapped_symbol_after_refill_clears_old_ipa(
+    ctx: StageContext, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _card(ctx, "le vent")
+    assert run_phonemize(ctx).counts["phonemize.updated"] == 1
+    assert _row(ctx)["ipa"].startswith("v1|")
+
+    def _boom(_ipa: str) -> list[str]:
+        raise ValueError("símbolo de fonema no mapeado: 'ʘ'")
+
+    monkeypatch.setattr("frances.cards.phonemes.PHONEME_MAP_VERSION", "2")
+    monkeypatch.setattr("frances.cards.phonemes.to_azure_phonemes", _boom)
+    report = run_phonemize(ctx)
+    assert report.status == "partial"
+    assert report.errors
+    assert _row(ctx)["ipa"] is None
+
+
+ADR_004_LABELS = {
+    # vocales orales (12)
+    "a", "ɑ", "e", "ɛ", "i", "o", "ɔ", "u", "y", "ø", "œ", "ə",  # noqa: RUF001
+    # vocales nasales (4)
+    "ɑ̃", "ɔ̃", "ɛ̃", "œ̃",  # noqa: RUF001
+    # consonantes (18)
+    "p", "b", "t", "d", "k", "ɡ", "f", "v", "s", "z", "ʃ", "ʒ", "m", "n", "ɲ", "ŋ", "l", "ʁ",  # noqa: RUF001
+    # semivocales (3)
+    "j", "w", "ɥ",
+}  # fmt: skip
+
+
+def test_labels_are_exactly_adr_004_table() -> None:
+    assert len(ADR_004_LABELS) == 37
+    assert set(ESPEAK_TO_AZURE.values()) == ADR_004_LABELS

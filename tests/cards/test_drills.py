@@ -9,6 +9,7 @@ from frances.cards.drills import (
     AUTO_MAX_CARDS,
     AUTO_MIN_CARDS,
     TARGETS,
+    SeedTarget,
     build_drill_decks,
     load_seed,
     seed_drills,
@@ -19,6 +20,7 @@ from frances.models import card_id
 
 T1 = "2026-10-10T00:00:00Z"
 T2 = "2026-10-11T00:00:00Z"
+T3 = "2026-10-12T00:00:00Z"
 
 
 def _cards_with_phoneme(
@@ -60,8 +62,36 @@ def test_seed_idempotent(conn: sqlite3.Connection) -> None:
         row["generator_version"],
         row["created_at"],
     ) == ("drill", "seed", "1", T1)
-    assert row["updated_at"] == T2
+    assert row["updated_at"] == T1  # sin cambios no se toca updated_at (R-13)
     assert json.loads(row["tags"]) == ["taladro", "an"]
+
+
+def test_seed_unchanged_keeps_updated_at_changed_refreshes(conn: sqlite3.Connection) -> None:
+    conn.row_factory = sqlite3.Row
+    seed_drills(conn, T1)
+    vent = card_id("le vent", "drill")
+    conn.execute("UPDATE cards SET back_es = 'otra cosa' WHERE id = ?", (vent,))
+    assert seed_drills(conn, T3) == 0
+    rows = {row["id"]: row for row in conn.execute("SELECT * FROM cards WHERE generator = 'seed'")}
+    assert rows[vent]["updated_at"] == T3
+    assert rows[vent]["back_es"] != "otra cosa"
+    assert rows[vent]["created_at"] == T1
+    assert {row["updated_at"] for cid, row in rows.items() if cid != vent} == {T1}
+
+
+def test_seed_drills_loads_seed_once(
+    conn: sqlite3.Connection, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls = 0
+
+    def _counting() -> dict[str, SeedTarget]:
+        nonlocal calls
+        calls += 1
+        return load_seed()
+
+    monkeypatch.setattr("frances.cards.drills.load_seed", _counting)
+    seed_drills(conn, T1)
+    assert calls == 1
 
 
 @pytest.mark.parametrize(
@@ -118,7 +148,8 @@ def test_auto_deck_excludes_stale_shortest_first_max_50(conn: sqlite3.Connection
     assert len(deck.card_ids) == AUTO_MAX_CARDS
     stale_ids = {cid for _, cid, stale in created if stale}
     assert not stale_ids & set(deck.card_ids)
-    front_by_id = {cid: front for front, cid, _ in created}
-    actual_lengths = sorted(len(front_by_id[cid]) for cid in deck.card_ids)
-    non_stale_lengths = sorted(len(front) for front, _, stale in created if not stale)
-    assert actual_lengths == non_stale_lengths[:AUTO_MAX_CARDS]
+    live = [(len(front), cid) for front, cid, stale in created if not stale]
+    expected = [cid for _, cid in sorted(live)[:AUTO_MAX_CARDS]]
+    assert deck.card_ids == expected  # orden real: longitud asc y desempate por id
+    lengths = [len(front) for front, _, _ in created]
+    assert len(set(lengths)) < len(lengths)  # hay empates que resolver por id

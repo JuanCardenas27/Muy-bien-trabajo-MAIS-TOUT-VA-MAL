@@ -31,20 +31,32 @@ BATCH_SIZE = 200
 def espeak_ipa(texts: list[str]) -> list[str]:
     """IPA de cada texto, una salida por entrada (misma longitud que ``texts``).
 
-    Pasa todos los textos en una sola llamada separados por saltos de línea; si
-    el número de líneas no vacías no coincide con ``len(texts)`` (la puntuación
-    inserta pausas), repite con una llamada por texto y une sus líneas con espacio.
+    Un texto sin caracteres alfanuméricos (``…``, ``?``, emoji) devuelve ``""``
+    sin pasar por espeak-ng, que no emite línea para él. El resto va en una sola
+    llamada separado por saltos de línea; como cada texto alfanumérico produce al
+    menos una línea, el lote solo se acepta si hay exactamente una por texto. Si
+    no (la puntuación inserta pausas), repite con una llamada por texto y une sus
+    líneas con espacio, de modo que el resultado siempre queda alineado.
     """
-    if not texts:
-        return []
     prepared = [tts_norm(text).replace("\n", " ") for text in texts]
+    spoken = [index for index, text in enumerate(prepared) if _has_alnum(text)]
+    ipas = [""] * len(texts)
+    if not spoken:
+        return ipas
     result = subprocess.run(
-        list(_ESPEAK_CMD), input="\n".join(prepared), capture_output=True, text=True, check=True
+        list(_ESPEAK_CMD),
+        input="\n".join(prepared[index] for index in spoken),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=True,
     )
     lines = _nonempty_lines(result.stdout)
-    if len(lines) == len(texts):
-        return lines
-    return [_phonemize_one(text) for text in prepared]
+    if len(lines) != len(spoken):
+        lines = [_phonemize_one(prepared[index]) for index in spoken]
+    for index, line in zip(spoken, lines, strict=True):
+        ipas[index] = line
+    return ipas
 
 
 def to_azure_phonemes(ipa: str) -> list[str]:
@@ -105,10 +117,20 @@ def _nonempty_lines(output: str) -> list[str]:
     return [line.strip() for line in output.splitlines() if line.strip()]
 
 
+def _has_alnum(text: str) -> bool:
+    """``True`` si el texto tiene al menos un carácter alfanumérico."""
+    return any(char.isalnum() for char in text)
+
+
 def _phonemize_one(text: str) -> str:
     """IPA de un solo texto; sus líneas (pausas) se unen con espacio."""
     result = subprocess.run(
-        list(_ESPEAK_CMD), input=text, capture_output=True, text=True, check=True
+        list(_ESPEAK_CMD),
+        input=text,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=True,
     )
     return " ".join(_nonempty_lines(result.stdout))
 
@@ -122,21 +144,24 @@ def _process_batch(ctx: StageContext, rows: list[Any], report: StageReport) -> N
         report.errors.append(redact(str(exc), ctx.env))
         return
     updates: list[tuple[str, str, str]] = []
+    failed: list[tuple[str]] = []
     for row, ipa in zip(rows, ipas, strict=True):
         card = str(row[0])
         try:
             labels = to_azure_phonemes(ipa)
         except ValueError as exc:
             report.errors.append(f"{card}: {exc}")
+            failed.append((card,))
             continue
         unique = list(dict.fromkeys(labels))
         updates.append(
             (f"v{PHONEME_MAP_VERSION}|{ipa}", json.dumps(unique, ensure_ascii=False), card)
         )
-    if not updates:
+    if not updates and not failed:
         return
     with ctx.store.tx() as conn:
         _q_update_ipa(conn, updates)
+        _q_clear_ipa(conn, failed)
     report.counts["phonemize.updated"] += len(updates)
 
 
@@ -155,6 +180,11 @@ def _q_cards_needing_ipa(
 def _q_update_ipa(conn: sqlite3.Connection, updates: list[tuple[str, str, str]]) -> None:
     """Escribe ``ipa`` y ``phonemes`` de cada tarjeta del lote."""
     conn.executemany("UPDATE cards SET ipa = ?, phonemes = ? WHERE id = ?", updates)
+
+
+def _q_clear_ipa(conn: sqlite3.Connection, cards: list[tuple[str]]) -> None:
+    """Deja ``ipa`` en NULL en las tarjetas cuyo IPA no se pudo mapear."""
+    conn.executemany("UPDATE cards SET ipa = NULL WHERE id = ? AND ipa IS NOT NULL", cards)
 
 
 def register(app: typer.Typer) -> None:
