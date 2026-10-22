@@ -88,20 +88,33 @@ export function createAzureRecognizer(creds: SpeechCredentials): Recognizer {
       );
       assessment.applyTo(recognizer);
 
-      const onAbort = () => {
-        try {
-          recognizer.close();
-        } catch {
-          // `close()` durante una cancelación no debe romper la máquina de estados.
-        }
-      };
-      signal?.addEventListener('abort', onAbort, { once: true });
+      let onAbort: () => void = () => undefined;
       try {
         const result = await new Promise<SpeechResult>((resolve, reject) => {
+          // Una sola resolución: lo primero que llegue (callback del SDK o
+          // abort) gana; lo demás se ignora.
+          let settled = false;
+          const settle = (fn: () => void) => {
+            if (!settled) {
+              settled = true;
+              fn();
+            }
+          };
+          onAbort = () => {
+            settle(() => reject(new RecognizerError('canceled')));
+            try {
+              recognizer.close();
+            } catch {
+              // `close()` durante una cancelación no debe romper la máquina de estados.
+            }
+          };
+          signal?.addEventListener('abort', onAbort, { once: true });
           recognizer.recognizeOnceAsync(
-            (r) => resolve(r),
+            (r) => settle(() => resolve(r)),
             (errorMessage) =>
-              reject(new RecognizerError('canceled', errorMessage)),
+              settle(() =>
+                reject(new RecognizerError('canceled', errorMessage)),
+              ),
           );
         });
         return interpret(sdk, result);

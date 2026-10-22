@@ -6,7 +6,7 @@
 // siempre antes de terminar. El audio nunca se persiste.
 
 import type { PronResult } from '../contracts/generated';
-import { PronParseError, parseAzureResult } from './parse';
+import { parseAzureResult } from './parse';
 import type { Recognizer } from './recognizer';
 import { RecognizerError } from './recognizer';
 
@@ -57,6 +57,15 @@ function micErrorMessage(error: unknown): string {
     ) {
       return RECORDER_MESSAGES.no_microphone;
     }
+    // Micrófono ocupado, interrumpido o con restricciones imposibles: el
+    // navegador sí permite grabar, así que se invita a reintentar.
+    if (
+      error.name === 'NotReadableError' ||
+      error.name === 'AbortError' ||
+      error.name === 'OverconstrainedError'
+    ) {
+      return RECORDER_MESSAGES.canceled;
+    }
   }
   return RECORDER_MESSAGES.unsupported;
 }
@@ -68,6 +77,12 @@ function recognizerErrorMessage(error: unknown): string {
   return RECORDER_MESSAGES.canceled;
 }
 
+function stopTracks(stream: MediaStream): void {
+  for (const track of stream.getTracks()) {
+    track.stop();
+  }
+}
+
 export function createRecorder(
   recognizer: Recognizer,
   getUserMedia: (
@@ -77,22 +92,17 @@ export function createRecorder(
 ): Recorder {
   let state: RecorderState = { status: 'idle' };
   const listeners = new Set<(state: RecorderState) => void>();
-  let controller: AbortController | null = null;
-  let stream: MediaStream | null = null;
+  // Sesión en curso: cada `start` tiene su propio controller y su propio
+  // stream. Una sesión abortada o reemplazada nunca toca el estado compartido.
+  let session: {
+    controller: AbortController;
+    stream: MediaStream | null;
+  } | null = null;
 
   const setState = (next: RecorderState) => {
     state = next;
     for (const listener of listeners) {
       listener(next);
-    }
-  };
-
-  const stopTracks = () => {
-    if (stream) {
-      for (const track of stream.getTracks()) {
-        track.stop();
-      }
-      stream = null;
     }
   };
 
@@ -107,51 +117,61 @@ export function createRecorder(
     },
 
     async start(referenceText, cardId) {
-      if (state.status !== 'idle') {
+      if (
+        state.status === 'requesting_mic' ||
+        state.status === 'recording' ||
+        state.status === 'scoring'
+      ) {
         return;
       }
-      controller = new AbortController();
-      const signal = controller.signal;
+      const mine: { controller: AbortController; stream: MediaStream | null } =
+        { controller: new AbortController(), stream: null };
+      session = mine;
+      const signal = mine.controller.signal;
+      const isCurrent = () => session === mine && !signal.aborted;
+      const finish = (next: RecorderState) => {
+        if (mine.stream) {
+          stopTracks(mine.stream);
+          mine.stream = null;
+        }
+        if (isCurrent()) {
+          session = null;
+          setState(next);
+        }
+      };
       setState({ status: 'requesting_mic' });
 
       let captured: MediaStream;
       try {
         captured = await getUserMedia({ audio: true });
       } catch (error) {
-        if (signal.aborted) {
-          setState({ status: 'idle' });
-          return;
-        }
-        setState({ status: 'error', message: micErrorMessage(error) });
+        finish({ status: 'error', message: micErrorMessage(error) });
         return;
       }
-      stream = captured;
-      if (signal.aborted) {
-        stopTracks();
-        setState({ status: 'idle' });
+      if (!isCurrent()) {
+        stopTracks(captured);
         return;
       }
+      mine.stream = captured;
 
       setState({ status: 'recording' });
       let outcome: { json: unknown; durationMs: number };
       try {
         outcome = await recognizer.assess(referenceText, signal);
       } catch (error) {
-        stopTracks();
-        if (signal.aborted) {
-          setState({ status: 'idle' });
-          return;
-        }
-        setState({ status: 'error', message: recognizerErrorMessage(error) });
+        finish({ status: 'error', message: recognizerErrorMessage(error) });
         return;
       }
-      stopTracks();
-      if (signal.aborted) {
-        setState({ status: 'idle' });
+      if (mine.stream) {
+        stopTracks(mine.stream);
+        mine.stream = null;
+      }
+      if (!isCurrent()) {
         return;
       }
 
       setState({ status: 'scoring' });
+      let next: RecorderState;
       try {
         const result = parseAzureResult(
           outcome.json,
@@ -160,20 +180,26 @@ export function createRecorder(
           now(),
           outcome.durationMs,
         );
-        setState({ status: 'done', result });
-      } catch (error) {
-        if (error instanceof PronParseError) {
-          setState({ status: 'error', message: RECORDER_MESSAGES.canceled });
-          return;
-        }
-        throw error;
+        next = { status: 'done', result };
+      } catch {
+        // `PronParseError` es el caso esperado; cualquier otro error del
+        // parser (p. ej. TypeError) tampoco debe dejar el grabador en `scoring`.
+        next = { status: 'error', message: RECORDER_MESSAGES.canceled };
       }
+      finish(next);
     },
 
     abort() {
-      controller?.abort();
-      stopTracks();
-      if (state.status !== 'done') {
+      const current = session;
+      session = null;
+      if (current) {
+        current.controller.abort();
+        if (current.stream) {
+          stopTracks(current.stream);
+          current.stream = null;
+        }
+      }
+      if (state.status !== 'idle') {
         setState({ status: 'idle' });
       }
     },
