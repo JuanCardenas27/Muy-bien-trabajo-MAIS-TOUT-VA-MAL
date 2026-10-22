@@ -79,9 +79,7 @@ test('shows the four blocks', async () => {
     screen.getByRole('link', { name: 'Repasar ahora' }).getAttribute('href'),
   ).toBe('/review');
   expect(
-    screen
-      .getByRole('link', { name: 'Practicar /ɑ̃/' })
-      .getAttribute('href'),
+    screen.getByRole('link', { name: 'Practicar /ɑ̃/' }).getAttribute('href'),
   ).toBe('/drill/%C9%91%CC%83');
   expect(screen.getByText('Línea base: 94 (14 oct 2026)')).toBeTruthy();
 });

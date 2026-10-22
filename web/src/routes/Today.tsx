@@ -95,9 +95,9 @@ export default function Today(props: { now?: Date }): JSX.Element {
   return (
     <section>
       <h1>{t('today.title')}</h1>
-      {dueCount === 0 &&
-        deadlines.length === 0 &&
-        newItems.length === 0 && <p>{t('today.empty')}</p>}
+      {dueCount === 0 && deadlines.length === 0 && newItems.length === 0 && (
+        <p>{t('today.empty')}</p>
+      )}
       <section>
         <h2>{t('today.due')}</h2>
         <p>{t('today.dueCount', { n: dueCount })}</p>
