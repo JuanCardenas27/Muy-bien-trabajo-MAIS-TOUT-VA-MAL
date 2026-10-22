@@ -14,10 +14,9 @@ import { useContent } from '../data/ContentContext';
 import { getSetting, setSetting } from '../db/idb';
 import { formatShort } from '../i18n/dates';
 import { t } from '../i18n/es';
-import { loadStats, weakPhonemes } from '../pron/stats';
+import { loadStats, SEED_WEAK, weakPhonemes } from '../pron/stats';
 import { createSrsStore } from '../srs/store';
 
-const SEED_WEAK = ['ɑ̃', 'e', 'ʁ'];
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEADLINE_WINDOW_MS = 14 * DAY_MS;
 const NEW_WINDOW_MS = 7 * DAY_MS;
@@ -38,14 +37,30 @@ export default function Today(props: { now?: Date }): JSX.Element {
     [index.cards],
   );
 
+  // `last_visit_at` se lee una sola vez y se escribe solo al salir de la
+  // pantalla; un efecto propio sin dependencias evita que un remontaje
+  // (StrictMode) o un cambio de índice lo pise antes de leerlo.
+  const lastVisitRead = useRef<Promise<string | null> | null>(null);
+  lastVisitRead.current ??= getSetting('last_visit_at');
+
   useEffect(() => {
     const nowIso = now.toISOString();
+    return () => {
+      void lastVisitRead.current?.then(() =>
+        setSetting('last_visit_at', nowIso),
+      );
+    };
+  }, [now]);
+
+  useEffect(() => {
     let cancelled = false;
     void (async () => {
       const [count, stats, storedLastVisit] = await Promise.all([
-        createSrsStore(activeIds).countDue(now),
-        loadStats(),
-        getSetting('last_visit_at'),
+        createSrsStore(activeIds)
+          .countDue(now)
+          .catch(() => 0),
+        loadStats().catch(() => []),
+        (lastVisitRead.current ?? Promise.resolve(null)).catch(() => null),
       ]);
       if (cancelled) {
         return;
@@ -57,7 +72,6 @@ export default function Today(props: { now?: Date }): JSX.Element {
     })();
     return () => {
       cancelled = true;
-      void setSetting('last_visit_at', nowIso);
     };
   }, [activeIds, now]);
 
