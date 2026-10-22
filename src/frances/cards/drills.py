@@ -64,11 +64,14 @@ def seed_drills(conn: sqlite3.Connection, now: str) -> int:
 
     No abre transacción: la abren ``run_daily`` y ``run_bundle`` (R-13). Es
     idempotente: ``ON CONFLICT`` actualiza las tarjetas ``generator='seed'`` sin
-    reescribir ``created_at`` ni pisar tarjetas de otro generador.
+    reescribir ``created_at`` ni pisar tarjetas de otro generador, y solo cuando
+    cambia ``back_es``, ``notes`` o ``tags``: sin cambios, ``updated_at`` se
+    conserva y el volcado de estado no varía entre corridas (R-13).
     """
+    seed = load_seed()
     inserted = 0
     for target in TARGETS:
-        for entry in load_seed()[target].entries:
+        for entry in seed[target].entries:
             cid = card_id(entry.front_fr, "drill")
             if not _q_card_exists(conn, cid):
                 inserted += 1
@@ -142,7 +145,7 @@ def _q_card_exists(conn: sqlite3.Connection, cid: str) -> bool:
 def _q_upsert_seed_card(
     conn: sqlite3.Connection, cid: str, entry: SeedEntry, target: str, now: str
 ) -> None:
-    """Inserta o refresca una tarjeta curada sin tocar las de otro generador."""
+    """Inserta o refresca (solo si cambió) una tarjeta curada de ``generator='seed'``."""
     tags = json.dumps(["taladro", target], ensure_ascii=False)
     conn.execute(
         "INSERT INTO cards (id, kind, front_fr, back_es, notes, tags, generator,"
@@ -150,7 +153,8 @@ def _q_upsert_seed_card(
         " VALUES (?, 'drill', ?, ?, ?, ?, 'seed', '1', ?, ?)"
         " ON CONFLICT(id) DO UPDATE SET back_es = excluded.back_es, notes = excluded.notes,"
         " tags = excluded.tags, updated_at = excluded.updated_at"
-        " WHERE cards.generator = 'seed'",
+        " WHERE cards.generator = 'seed' AND (cards.back_es IS NOT excluded.back_es"
+        " OR cards.notes IS NOT excluded.notes OR cards.tags IS NOT excluded.tags)",
         (cid, entry.front_fr, entry.back_es, entry.notes, tags, now, now),
     )
 
