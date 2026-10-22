@@ -52,6 +52,24 @@ function isRow(value: unknown): value is Row {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function isNumber(value: unknown): boolean {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+// Campos numéricos que leen Progreso, Hoy y la cuota (PRN-04/06/07): una
+// fila sin ellos se importaría bien y rompería la pantalla después.
+const ROW_SHAPE: Record<ProgressStore, (row: Row) => boolean> = {
+  srs: () => true,
+  review_log: () => true,
+  attempts: (row) =>
+    typeof row['at'] === 'string' &&
+    isRow(row['scores']) &&
+    isNumber(row['scores']['pron']) &&
+    Array.isArray(row['words']),
+  phoneme_stats: (row) => isNumber(row['ema']) && isNumber(row['n']),
+  usage: (row) => isNumber(row['seconds']) || isNumber(row['pron_seconds']),
+};
+
 function validate(data: unknown): Record<ProgressStore, Row[]> {
   if (
     !isRow(data) ||
@@ -69,7 +87,11 @@ function validate(data: unknown): Record<ProgressStore, Row[]> {
     }
     const field = REQUIRED_KEY[store];
     for (const row of rows) {
-      if (!isRow(row) || typeof row[field] !== 'string') {
+      if (
+        !isRow(row) ||
+        typeof row[field] !== 'string' ||
+        !ROW_SHAPE[store](row)
+      ) {
         throw new ProgressImportError();
       }
     }

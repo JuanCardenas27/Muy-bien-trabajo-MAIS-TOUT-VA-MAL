@@ -101,7 +101,8 @@ export default function Settings(): JSX.Element {
       a.click();
       a.remove();
     } finally {
-      URL.revokeObjectURL(url);
+      // WebKit cancela la descarga si la URL se revoca en el mismo tick.
+      setTimeout(() => URL.revokeObjectURL(url), 100);
     }
   }
 

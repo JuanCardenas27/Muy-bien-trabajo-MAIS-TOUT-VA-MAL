@@ -44,10 +44,14 @@ async function seedAllStores(): Promise<void> {
     scheduled_days: 0,
   });
   await db.put('attempts', {
-    id: 'a1',
+    id: 'a1b2c3d4',
     card_id: 'c1',
-    at: '2026-10-15T12:02:00.000Z',
-    pron: 88,
+    at: '2026-10-15T12:02:00.000000Z',
+    duration_ms: 1500,
+    reference_text: 'Bonjour',
+    recognized_text: 'Bonjour',
+    scores: { pron: 88, accuracy: 90, fluency: 85, completeness: 100 },
+    words: [],
   });
   await db.put('phoneme_stats', {
     phoneme: 'ʁ',
@@ -108,6 +112,19 @@ test('invalid rows are rejected without touching the db', async () => {
   const before = await exportProgress(NOW);
   await expect(
     importProgress({ ...before, srs: [{ sin_card_id: true }] }),
+  ).rejects.toBeInstanceOf(ProgressImportError);
+  expect(await exportProgress(NOW)).toEqual(before);
+});
+
+test('rows missing fields the screens read are rejected', async () => {
+  await seedAllStores();
+  const before = await exportProgress(NOW);
+  const [attempt] = before.attempts as Record<string, unknown>[];
+  await expect(
+    importProgress({ ...before, attempts: [{ ...attempt, scores: {} }] }),
+  ).rejects.toBeInstanceOf(ProgressImportError);
+  await expect(
+    importProgress({ ...before, usage: [{ month: '2026-10' }] }),
   ).rejects.toBeInstanceOf(ProgressImportError);
   expect(await exportProgress(NOW)).toEqual(before);
 });
