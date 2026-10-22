@@ -118,3 +118,137 @@ test('abort returns to idle and aborts the signal', async () => {
   expect(sig?.aborted).toBe(true);
   expect(r.getState()).toEqual({ status: 'idle' });
 });
+
+const neverAssess = () =>
+  new Promise<{ json: unknown; durationMs: number }>(() => undefined);
+
+const fakeStream = () => {
+  const trackStop = vi.fn();
+  const s = {
+    getTracks: () => [{ stop: trackStop }],
+  } as unknown as MediaStream;
+  return { stream: s, trackStop };
+};
+
+test('start again after done and after error', async () => {
+  let fail = false;
+  const r = createRecorder(
+    {
+      assess: () =>
+        fail
+          ? Promise.reject(new RecognizerError('no_match'))
+          : Promise.resolve({ json: allez, durationMs: 1840 }),
+    },
+    okGum,
+  );
+  await r.start('Allez !', null);
+  expect(r.getState().status).toBe('done');
+  fail = true;
+  await r.start('Allez !', null);
+  expect(r.getState()).toEqual({
+    status: 'error',
+    message: 'No se escuchó nada, intenta de nuevo',
+  });
+  fail = false;
+  await r.start('Allez !', null);
+  expect(r.getState().status).toBe('done');
+  r.abort();
+  expect(r.getState()).toEqual({ status: 'idle' });
+});
+
+test('start is ignored while a session is in progress', async () => {
+  const assess = vi.fn(neverAssess);
+  const r = createRecorder({ assess }, okGum);
+  void r.start('Bonjour', null);
+  await vi.waitFor(() => expect(r.getState().status).toBe('recording'));
+  await r.start('Bonjour', null);
+  expect(assess).toHaveBeenCalledTimes(1);
+  expect(r.getState().status).toBe('recording');
+});
+
+test('aborted session during getUserMedia does not touch the new session', async () => {
+  const old = fakeStream();
+  const fresh = fakeStream();
+  let resolveOld: (s: MediaStream) => void = () => undefined;
+  const gum = vi
+    .fn<(c: MediaStreamConstraints) => Promise<MediaStream>>()
+    .mockImplementationOnce(
+      () =>
+        new Promise<MediaStream>((resolve) => {
+          resolveOld = resolve;
+        }),
+    )
+    .mockImplementationOnce(async () => fresh.stream);
+  const r = createRecorder({ assess: neverAssess }, gum);
+  void r.start('Bonjour', null);
+  await vi.waitFor(() => expect(r.getState().status).toBe('requesting_mic'));
+  r.abort();
+  void r.start('Bonjour', null);
+  await vi.waitFor(() => expect(r.getState().status).toBe('recording'));
+  resolveOld(old.stream);
+  await vi.waitFor(() => expect(old.trackStop).toHaveBeenCalled());
+  expect(fresh.trackStop).not.toHaveBeenCalled();
+  expect(r.getState().status).toBe('recording');
+});
+
+test('aborted session during assess does not stop the new session tracks', async () => {
+  const old = fakeStream();
+  const fresh = fakeStream();
+  let rejectOld: (e: unknown) => void = () => undefined;
+  const assess = vi
+    .fn<Recognizer['assess']>()
+    .mockImplementationOnce(
+      () =>
+        new Promise((_resolve, reject) => {
+          rejectOld = reject;
+        }),
+    )
+    .mockImplementationOnce(neverAssess);
+  const gum = vi
+    .fn<(c: MediaStreamConstraints) => Promise<MediaStream>>()
+    .mockImplementationOnce(async () => old.stream)
+    .mockImplementationOnce(async () => fresh.stream);
+  const r = createRecorder({ assess }, gum);
+  void r.start('Bonjour', null);
+  await vi.waitFor(() => expect(r.getState().status).toBe('recording'));
+  r.abort();
+  expect(old.trackStop).toHaveBeenCalled();
+  void r.start('Bonjour', null);
+  await vi.waitFor(() => expect(assess).toHaveBeenCalledTimes(2));
+  rejectOld(new RecognizerError('canceled'));
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(fresh.trackStop).not.toHaveBeenCalled();
+  expect(r.getState().status).toBe('recording');
+});
+
+test('unexpected parser error goes to error state instead of hanging in scoring', async () => {
+  const r = createRecorder(
+    {
+      assess: async () => ({
+        json: { NBest: [{ Words: 5 }] },
+        durationMs: 10,
+      }),
+    },
+    okGum,
+  );
+  await r.start('Bonjour', null);
+  expect(r.getState()).toEqual({
+    status: 'error',
+    message: 'No se pudo evaluar, intenta de nuevo',
+  });
+});
+
+test.each(['NotReadableError', 'AbortError', 'OverconstrainedError'])(
+  '%s from getUserMedia maps to the canceled message',
+  async (name) => {
+    const r = createRecorder({ assess: vi.fn() } as unknown as Recognizer, () =>
+      Promise.reject(new DOMException('x', name)),
+    );
+    await r.start('Bonjour', null);
+    expect(r.getState()).toEqual({
+      status: 'error',
+      message: 'No se pudo evaluar, intenta de nuevo',
+    });
+  },
+);
