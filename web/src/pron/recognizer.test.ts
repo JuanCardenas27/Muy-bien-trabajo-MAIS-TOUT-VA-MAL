@@ -190,3 +190,14 @@ test('getRecognizer uses e2e fake only when VITE_E2E is 1', () => {
   vi.unstubAllEnvs();
   delete (window as unknown as Record<string, unknown>).__francesFakeRecognizer;
 });
+
+test('abort rejects a pending recognition with canceled and closes', async () => {
+  H.recognizeOnceAsync.mockImplementationOnce(() => undefined);
+  H.close.mockClear();
+  const controller = new AbortController();
+  const pending = createAzureRecognizer(creds).assess('x', controller.signal);
+  await vi.waitFor(() => expect(H.recognizeOnceAsync).toHaveBeenCalled());
+  controller.abort();
+  await expect(pending).rejects.toMatchObject({ code: 'canceled' });
+  expect(H.close).toHaveBeenCalled();
+});
