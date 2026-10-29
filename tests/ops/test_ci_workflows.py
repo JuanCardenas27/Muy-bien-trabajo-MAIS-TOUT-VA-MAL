@@ -54,6 +54,5 @@ def test_e2e_job_installs_both_browsers():
     )
     assert "e2e:prepare" not in run  # R-21: lo prepara webServer.command
     assert any(
-        "upload-artifact" in s.get("uses", "") and s.get("if") == "failure()"
-        for s in job["steps"]
+        "upload-artifact" in s.get("uses", "") and s.get("if") == "failure()" for s in job["steps"]
     )
