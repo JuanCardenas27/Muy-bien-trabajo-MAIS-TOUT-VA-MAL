@@ -81,6 +81,12 @@ MIXED_LINES = [
 
 
 def _font_path() -> Path:
+    # Fuente vendored en el repo: los bytes del PDF generado dependen de la
+    # fuente incrustada; usar la del sistema hacía que el md5 de los fixtures
+    # cambiara con cada actualización de fonts-dejavu-core del entorno.
+    vendored = Path(__file__).resolve().parent / "assets" / "DejaVuSans.ttf"
+    if vendored.is_file():
+        return vendored
     for candidate in (
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
         "/usr/share/fonts/fonts-dejavu/DejaVuSans.ttf",
