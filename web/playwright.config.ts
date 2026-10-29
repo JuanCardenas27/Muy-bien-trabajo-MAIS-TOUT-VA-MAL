@@ -11,11 +11,19 @@ const BASE_URL = `http://localhost:${PORT}/`;
 
 export default defineConfig({
   testDir: './e2e',
-  // PBKDF2 del bundle (600 000 iteraciones) y pdf.js pueden tardar más que
-  // los 5 s por defecto de un `expect` en webkit.
-  expect: { timeout: 15_000 },
-  // El demo es el mismo para cada spec; los contextos son independientes.
+  // Vitest también recoge `**/*.spec.ts`; los e2e usan `.e2e.ts` para no
+  // ejecutarse con `npm run test` (la exclusión vive en vite.config.ts, de
+  // WEB-12, así que aquí se resuelve sin tocar fuera de `owns`).
+  testMatch: /.*\.e2e\.ts$/,
+  outputDir: '../.cache/playwright-results',
+  // Cada desbloqueo deriva la clave con PBKDF2 (600 000 iteraciones) y
+  // `frances demo-bundle` tarda lo suyo; los timeouts por defecto se quedan
+  // cortos en runners de 2 vCPU. Un solo worker evita que las derivaciones
+  // compitan por CPU.
+  timeout: 120_000,
+  expect: { timeout: 30_000 },
   fullyParallel: true,
+  workers: 1,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   use: { baseURL: BASE_URL },

@@ -7,6 +7,7 @@
 
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 export const DEMO_PASSPHRASE = 'demo demo demo demo demo demo';
@@ -27,6 +28,9 @@ export async function unlockDemo(page: Page, path = '/'): Promise<void> {
   await page.goto(path);
   await page.getByLabel('Passphrase').fill(DEMO_PASSPHRASE);
   await page.getByRole('button', { name: 'Desbloquear', exact: true }).click();
+  // El clic solo inicia la derivación + descarga del índice; hay que esperar
+  // a que la navegación ocurra antes de recargar o cambiar de ruta.
+  await expect(page).not.toHaveURL(/\/unlock(?:[?#]|$)/);
 }
 
 // Aísla la spec del hardware: `createRecorder` siempre pide un stream de
@@ -35,14 +39,31 @@ export async function unlockDemo(page: Page, path = '/'): Promise<void> {
 export async function installFakeRecognizer(page: Page): Promise<void> {
   await page.addInitScript(
     ({ json, durationMs }) => {
-      const mediaDevices = navigator.mediaDevices as MediaDevices | undefined;
       const getUserMedia = async (): Promise<MediaStream> =>
         ({ getTracks: () => [] }) as unknown as MediaStream;
+      // webkit no siempre deja reemplazar el método en la instancia; se
+      // parchea el prototipo y, si hace falta, el getter de `navigator`.
+      const mediaDevices = navigator.mediaDevices as MediaDevices | undefined;
+      const proto = (
+        window as unknown as {
+          MediaDevices?: { prototype: object };
+        }
+      ).MediaDevices?.prototype;
+      const patch = (target: object): void => {
+        try {
+          Object.defineProperty(target, 'getUserMedia', {
+            configurable: true,
+            value: getUserMedia,
+          });
+        } catch {
+          // El navegador no permite reemplazarlo en este objeto.
+        }
+      };
+      if (proto !== undefined) {
+        patch(proto);
+      }
       if (mediaDevices !== undefined) {
-        Object.defineProperty(mediaDevices, 'getUserMedia', {
-          configurable: true,
-          value: getUserMedia,
-        });
+        patch(mediaDevices);
       } else {
         Object.defineProperty(navigator, 'mediaDevices', {
           configurable: true,
