@@ -1,0 +1,77 @@
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  pages:
+    name: pages
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: astral-sh/setup-uv@0c5e2b8115b80b4c7c5ddf6ffdd634974642d182 # v5.4.1
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.3.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install
+        run: uv sync --frozen && npm --prefix web ci
+      - name: Build app
+        env:
+          VITE_BASE: "/${{ github.event.repository.name }}/"
+          VITE_DATA_URL: "${{ vars.FRANCES_DATA_URL }}"
+        run: |
+          if [ -z "$VITE_DATA_URL" ]; then
+            mkdir -p web/dist
+            cat > web/dist/index.html <<'HTML'
+          <!doctype html>
+          <html lang="es">
+            <head>
+              <meta charset="utf-8" />
+              <meta http-equiv="refresh" content="0; url=./demo/" />
+              <title>Frances Classroom</title>
+            </head>
+            <body>
+              <p><a href="./demo/">Abrir el demo</a></p>
+            </body>
+          </html>
+          HTML
+          else
+            npm --prefix web run build
+          fi
+      - name: Build demo
+        env:
+          VITE_BASE: "/${{ github.event.repository.name }}/demo/"
+        run: |
+          npm --prefix web run build -- --outDir dist-demo
+          mkdir -p web/dist
+          mv web/dist-demo web/dist/demo
+      - name: Demo bundle
+        run: uv run frances demo-bundle --out web/dist/demo/data
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+        with:
+          path: web/dist
+      - name: Deploy pages
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5

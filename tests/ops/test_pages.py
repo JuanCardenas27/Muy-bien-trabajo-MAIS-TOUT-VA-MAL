@@ -34,7 +34,9 @@ def test_pages_shape():
     assert all(PINNED.fullmatch(s["uses"]) for s in steps(wf) if "uses" in s)
     job = wf["jobs"]["pages"]
     assert job["environment"]["name"] == "github-pages"
-    assert step(wf, "Build demo")["env"]["VITE_BASE"] == "/${{ github.event.repository.name }}/demo/"
+    assert (
+        step(wf, "Build demo")["env"]["VITE_BASE"] == "/${{ github.event.repository.name }}/demo/"
+    )
     names = [s.get("name") for s in job["steps"]]
     assert (
         names.index("Build app")
