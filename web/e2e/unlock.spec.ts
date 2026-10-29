@@ -1,13 +1,11 @@
 // Desbloqueo del bundle de demostración (Task WEB-13, Review Focus 5).
 
 import { expect, test } from '@playwright/test';
-import { DEMO_PASSPHRASE, unlockDemo } from './helpers';
+import { unlockDemo } from './helpers';
 
 test('wrong passphrase shows error and keeps input', async ({ page }) => {
   await page.goto('/');
-  await page
-    .getByLabel('Passphrase')
-    .fill('no es la del demo para nada');
+  await page.getByLabel('Passphrase').fill('no es la del demo para nada');
   await page.getByRole('button', { name: 'Desbloquear' }).click();
   await expect(page.getByRole('alert')).toHaveText('Passphrase incorrecta');
   await expect(page.getByLabel('Passphrase')).toHaveValue(

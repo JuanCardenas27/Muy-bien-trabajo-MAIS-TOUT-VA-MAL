@@ -7,9 +7,7 @@ import { unlockDemo } from './helpers';
 test('open item with pdf shows page 1', async ({ page }) => {
   await unlockDemo(page);
   await page.getByRole('link', { name: 'Classroom', exact: true }).click();
-  await page
-    .getByRole('link', { name: 'Leçon 1 — Les salutations' })
-    .click();
+  await page.getByRole('link', { name: 'Leçon 1 — Les salutations' }).click();
   await expect(
     page.getByRole('img', { name: /^Página 1 de \d+$/ }),
   ).toBeVisible();
