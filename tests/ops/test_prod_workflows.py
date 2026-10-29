@@ -120,6 +120,9 @@ def test_publish_steps_skip_on_auth_failure():  # REVIEW FOCUS 1
         assert "steps.decide.outputs.deploy == 'true'" in cond
     for name in ("Dump", "Push"):
         assert "steps.daily.outputs.code != '3'" in step(wf, name)["if"]
+    publish = step(wf, "Publish")
+    assert "data/state/last_deploy_sha" in publish["run"]  # R-25
+    assert publish["env"]["FP"] == "${{ steps.decide.outputs.fingerprint }}"
     s = [x.get("name") for x in steps(wf)]
     assert (
         s.index("Lease")
