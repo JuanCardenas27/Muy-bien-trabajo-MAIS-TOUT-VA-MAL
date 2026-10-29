@@ -140,7 +140,9 @@ def test_render_input_truncates_prioritizing_fr() -> None:
 
 def test_strict_schema_requires_all_properties() -> None:
     card = strict_schema()["$defs"]["CardDraft"]
-    assert set(card["required"]) == set(card["properties"]) and card["additionalProperties"] is False
+    assert (
+        set(card["required"]) == set(card["properties"]) and card["additionalProperties"] is False
+    )
 
 
 def test_llm_from_env() -> None:
