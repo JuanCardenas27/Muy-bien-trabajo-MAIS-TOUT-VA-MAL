@@ -1,0 +1,13 @@
+# Ajustes de voces de producción (AUD-01, R-16).
+# Los defaults viven en src/frances/audio/voices_default.yaml
+# (13 builtin de Edge-TTS + 4 sintéticas jóvenes = 17 voces).
+# Aquí solo se ajusta una voz existente o se agrega una sintética nueva.
+voices: []
+
+# Ejemplos (descomentar y ajustar; comentados no se validan):
+#
+# Desactivar una voz builtin:
+#   - {id: fr-CA-JeanNeural, enabled: false}
+#
+# Ajustar el tono de una voz sintética (pitch_hz en Hz, rango −50…100):
+#   - {id: synth-teen-f, pitch_hz: 25}

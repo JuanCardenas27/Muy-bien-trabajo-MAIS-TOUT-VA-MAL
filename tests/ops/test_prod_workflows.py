@@ -55,7 +55,8 @@ def step(wf: dict[str, Any], name: str) -> dict[str, Any]:
 
 def test_crons_triggers_concurrency_and_pins():
     assert [on(load(n))["schedule"][0]["cron"] for n in NAMES] == ["17 10 * * *", "0 11 * * 0"]
-    assert all(set(on(load(n))) == {"schedule", "workflow_dispatch"} for n in NAMES)  # R-30: no push
+    # R-30: nunca push/PR; solo schedule o workflow_dispatch.
+    assert all(set(on(load(n))) == {"schedule", "workflow_dispatch"} for n in NAMES)
     assert all(
         load(n)["concurrency"] == {"group": "frances-prod", "cancel-in-progress": False}
         for n in NAMES
@@ -69,7 +70,8 @@ def test_public_repo_hardening_in_every_workflow():  # R-30
         assert "pull_request_target" not in text and "self-hosted" not in text
         if "secrets." in text.replace("secrets.GITHUB_TOKEN", ""):
             assert set(on(wf)) <= {"schedule", "workflow_dispatch"}
-            assert all(j.get("environment", {}).get("name") == "production" for j in wf["jobs"].values())
+            environments = [j.get("environment", {}).get("name") for j in wf["jobs"].values()]
+            assert all(name == "production" for name in environments)
 
 
 def test_secrets_vars_only_from_master_and_step_scoped():
@@ -86,6 +88,28 @@ def test_daily_job_shape():
     assert job["if"] == "vars.FRANCES_PROD == 'true'" and job["runs-on"] == "ubuntu-24.04"
     assert job["permissions"] == {"contents": "read", "issues": "write", "actions": "write"}
     assert job["timeout-minutes"] == 120 and job["environment"]["name"] == "production"
+
+
+def test_reconcile_job_shape():
+    wf = load("reconcile.yml")
+    job = wf["jobs"]["reconcile"]
+    assert job["if"] == "vars.FRANCES_PROD == 'true'" and job["runs-on"] == "ubuntu-24.04"
+    assert job["permissions"] == {"contents": "read", "issues": "write"}
+    assert job["timeout-minutes"] == 60 and job["environment"]["name"] == "production"
+    assert step(wf, "Reconcile")["id"] == "daily"
+    push = step(wf, "Push")
+    assert push["run"] == "uv run frances r2 push --label reconcile --data data"
+    assert push["if"] == "always() && steps.daily.outputs.code != '3'"
+    names = [s.get("name") for s in job["steps"]]
+    assert (
+        names.index("Lease")
+        < names.index("Pull")
+        < names.index("Reconcile")
+        < names.index("Push")
+        < names.index("Release lease")
+    )
+    text = yaml.safe_dump(job)
+    assert "apt-get" not in text and "frances bundle" not in text
 
 
 def test_publish_steps_skip_on_auth_failure():  # REVIEW FOCUS 1
