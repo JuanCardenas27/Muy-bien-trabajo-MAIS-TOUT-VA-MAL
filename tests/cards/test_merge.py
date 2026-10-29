@@ -67,7 +67,7 @@ class _FakeTranslator:
 
 def test_merge_keeps_card_and_adds_source(store: Store) -> None:
     """REVIEW FOCUS 3: tipografías distintas de la misma palabra → una tarjeta."""
-    merge_output(store, "mt_A", _out("«l’école»"), "rules", "1", T1)
+    merge_output(store, "mt_A", _out("«l’école»"), "rules", "1", T1)  # noqa: RUF001
     merge_output(store, "mt_B", _out("l'école"), "rules", "1", T2)
 
     rows = _cards(store, kind="vocab")
