@@ -40,7 +40,12 @@ jobs:
       - name: Install browsers
         run: npx --prefix web playwright install --with-deps chromium webkit
       - name: Run e2e
-        run: npm --prefix web exec playwright test
+        # Playwright resuelve su config desde el cwd: debe correr dentro de
+        # web/ para encontrar web/playwright.config.ts (testDir ./e2e).
+        # Con `--prefix web` el cwd quedaba en la raíz y Playwright recogía
+        # las suites de Vitest de todo el repo.
+        working-directory: web
+        run: npx playwright test
       - name: Upload report
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
