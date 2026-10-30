@@ -48,10 +48,13 @@ def test_e2e_job_installs_both_browsers():
     job = load("e2e.yml")["jobs"]["e2e"]
     run = "\n".join(s.get("run", "") for s in job["steps"])
     assert job["name"] == "e2e" and job["timeout-minutes"] == 30
-    assert (
-        "playwright install --with-deps chromium webkit" in run
-        and "npm --prefix web exec playwright test" in run
-    )
+    assert "playwright install --with-deps chromium webkit" in run
+    # Playwright resuelve su config desde el cwd: el step debe correr dentro
+    # de web/ (con `npm --prefix web exec ...` el cwd quedaba en la raíz, no
+    # encontraba web/playwright.config.ts y recogía las suites de Vitest).
+    run_step = next(s for s in job["steps"] if s.get("name") == "Run e2e")
+    assert run_step.get("working-directory") == "web"
+    assert run_step.get("run", "").strip() == "npx playwright test"
     assert "e2e:prepare" not in run  # R-21: lo prepara webServer.command
     assert any(
         "upload-artifact" in s.get("uses", "") and s.get("if") == "failure()" for s in job["steps"]
